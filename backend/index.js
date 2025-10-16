@@ -101,20 +101,41 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server with retry on EADDRINUSE
+function startServer(startPort, maxAttempts = 10) {
+  let attempts = 0;
+  function tryListen(port) {
+    const s = app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      // attach shutdown handlers to this server instance
+      function shutdown() {
+        console.log('Shutting down...');
+        s.close(() => {
+          console.log('Server closed');
+          process.exit(0);
+        });
+        setTimeout(() => process.exit(1), 5000);
+      }
+      process.on('SIGTERM', shutdown);
+      process.on('SIGINT', shutdown);
+    });
 
-// Graceful shutdown
-function shutdown() {
-  console.log('Shutting down...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-  // force exit after 5s
-  setTimeout(() => process.exit(1), 5000);
+    s.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        attempts += 1;
+        if (attempts >= maxAttempts) {
+          console.error(`Port ${port} in use and max attempts reached. Exiting.`);
+          process.exit(1);
+        }
+        console.warn(`Port ${port} in use, trying ${port + 1}...`);
+        setTimeout(() => tryListen(port + 1), 200);
+      } else {
+        console.error('Server error', err);
+        process.exit(1);
+      }
+    });
+  }
+  tryListen(startPort);
 }
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+startServer(Number(process.env.PORT) || PORT);

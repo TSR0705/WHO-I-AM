@@ -43,6 +43,13 @@ body.dark {
   margin-top: 12px;
   font-size: 0.95rem;
 }
+.hint {
+  display: none;
+  color: #666;
+  font-size: 0.9rem;
+  max-width: 420px;
+  margin: 8px auto;
+}
 .card .label {
   font-weight: 600;
   color: #888;

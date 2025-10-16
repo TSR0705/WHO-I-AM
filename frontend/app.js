@@ -1,9 +1,39 @@
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api/whoami'
-  : '/api/whoami';
+// Build a list of candidate endpoints to try. This makes the UI work when:
+// - served from the backend (relative /api/whoami),
+// - opened directly as a file:// (no origin), or
+// - backend is running on a different local port (3000, 3002, 3003).
+const candidates = [];
+if (location && location.protocol && location.protocol.startsWith('http')) {
+  // If the page has an origin, prefer same-origin relative endpoint first
+  candidates.push('/api/whoami');
+}
+// Add common local backend ports as fallbacks (use explicit host so file:// works)
+candidates.push('http://localhost:3000/api/whoami');
+candidates.push('http://127.0.0.1:3000/api/whoami');
+candidates.push('http://localhost:3002/api/whoami');
+candidates.push('http://localhost:3003/api/whoami');
+
+// Helper to try endpoints sequentially
+async function tryFetchCandidates() {
+  let lastErr = null;
+  for (const url of candidates) {
+    try {
+      const r = await fetch(url, { mode: 'cors' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const json = await r.json();
+      return { data: json, url };
+    } catch (e) {
+      lastErr = e;
+      // continue to next candidate
+    }
+  }
+  throw lastErr || new Error('No candidate API endpoints available');
+}
 
 const card = document.getElementById('card');
 const toggleBtn = document.getElementById('toggle-mode');
+const hintEl = document.getElementById('hint');
+const mapEl = document.getElementById('map');
 
 function renderData(data) {
   card.innerHTML = `
@@ -50,13 +80,21 @@ function renderError(err) {
 
 function fetchWhoAmI() {
   card.innerHTML = '<div class="loading">Loading…</div>';
-  fetch(API_URL)
-    .then(r => {
-      if (!r.ok) throw new Error('Failed to fetch');
-      return r.json();
+  tryFetchCandidates()
+    .then(({ data, url }) => {
+      renderData(data);
+      console.log('whoami fetched from', url);
+      if (hintEl) hintEl.style.display = 'none';
     })
-    .then(renderData)
-    .catch(e => renderError(e.message));
+    .catch(e => {
+      console.error('Failed to fetch /api/whoami:', e);
+      if (hintEl) hintEl.style.display = 'block';
+      // Show helpful suggestions when running from file:// or when backend port differs
+      const advice = (location && location.protocol === 'file:')
+        ? 'Open this page via http://localhost:3000 (or run the Docker image) instead of opening the file directly.'
+        : 'Ensure the backend is running (try: docker run -p 3000:3000 whoami-prod) and that the API is reachable.';
+      renderError(`Failed to fetch — ${e.message}. ${advice}`);
+    });
 }
 
 // Dark/Light mode toggle

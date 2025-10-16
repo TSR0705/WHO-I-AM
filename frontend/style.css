@@ -1,0 +1,84 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+}
+:root {
+  --bg: #f6f8fa;
+  --text: #222;
+  --card-bg: #fff;
+  --card-shadow: rgba(0,0,0,0.08);
+}
+body.dark {
+  --bg: #181c20;
+  --text: #f6f8fa;
+  --card-bg: #23272f;
+  --card-shadow: rgba(0,0,0,0.3);
+}
+.container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 16px;
+  text-align: center;
+}
+.card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 16px var(--card-shadow);
+  border-radius: 12px;
+  padding: 24px 16px;
+  margin-bottom: 24px;
+  min-height: 180px;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.map-card {
+  min-height: 280px;
+  padding: 8px;
+}
+.visitor-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
+.card .label {
+  font-weight: 600;
+  color: #888;
+  margin-right: 8px;
+}
+.card .value {
+  font-family: monospace;
+}
+.loading {
+  color: #888;
+  font-style: italic;
+}
+#error {
+  color: #d32f2f;
+  margin-top: 12px;
+}
+button {
+  background: #0078d4;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #005fa3;
+}
+@media (max-width: 500px) {
+  .container {
+    max-width: 98vw;
+    padding: 8px;
+  }
+  .card {
+    padding: 14px 4px;
+  }
+}

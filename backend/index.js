@@ -22,8 +22,23 @@ const PORT = process.env.PORT || 3000;
 // Respect TRUST_PROXY env var; default to true in production (common platform setups
 // such as Render/Heroku put the app behind a proxy and set X-Forwarded-* headers).
 // You can override by setting TRUST_PROXY explicitly to 'true' or 'false'.
+// Determine trust proxy setting:
+// - If TRUST_PROXY is explicitly provided, accept numeric (count) or boolean-like values.
+// - Otherwise default to trusting a single proxy in production (1) which is safer
+//   than the permissive `true` value and satisfies express-rate-limit validation.
 const trustProxyEnv = process.env.TRUST_PROXY;
-const trustProxy = (typeof trustProxyEnv !== 'undefined') ? (trustProxyEnv === 'true') : (process.env.NODE_ENV === 'production');
+let trustProxy;
+if (typeof trustProxyEnv !== 'undefined') {
+  // Allow numeric values (e.g. '1') or boolean-like strings ('true'/'false')
+  if (/^\d+$/.test(trustProxyEnv)) {
+    trustProxy = Number(trustProxyEnv);
+  } else {
+    trustProxy = trustProxyEnv === 'true';
+  }
+} else {
+  // Default to trusting one proxy in production (common platforms like Render)
+  trustProxy = (process.env.NODE_ENV === 'production') ? 1 : false;
+}
 app.set('trust proxy', trustProxy);
 app.use(helmet());
 app.use(express.json());

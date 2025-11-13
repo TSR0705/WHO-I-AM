@@ -40,7 +40,22 @@ if (typeof trustProxyEnv !== 'undefined') {
   trustProxy = (process.env.NODE_ENV === 'production') ? 1 : false;
 }
 app.set('trust proxy', trustProxy);
-app.use(helmet());
+// Configure Helmet with a Content Security Policy that allows the CDN hosts
+// we use for Leaflet and UAParser, and allows images from OpenStreetMap tiles.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
+      styleSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:', 'https://{s}.tile.openstreetmap.org', 'https://*.tile.openstreetmap.org', 'https://tile.openstreetmap.org'],
+      connectSrc: ["'self'", 'https://ipapi.co', 'https://api.ipify.org', 'https://*.tile.openstreetmap.org'],
+      fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    }
+  }
+}));
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(requestIp.mw());

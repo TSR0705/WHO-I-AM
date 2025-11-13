@@ -4,17 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Who Am I</title>
-  <!-- Set an initial theme class early to avoid a flash-of-unstyled-theme (FOUC).
-       We try localStorage first, then fall back to the user's OS preference. -->
-  <script>
-    (function(){
-      try {
-        var m = localStorage.getItem('whoami-mode');
-        if(!m && window.matchMedia) m = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        if(m) document.documentElement.classList.add(m);
-      } catch(e) { /* ignore */ }
-    })();
-  </script>
   <link rel="stylesheet" href="style.css" />
   <!-- Use CDN for Leaflet. Removed SRI integrity attributes because some CDNs rotate builds
        and the integrity can mismatch in local setups. If you need strict SRI, replace with

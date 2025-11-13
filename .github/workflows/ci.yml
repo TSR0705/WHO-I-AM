@@ -53,8 +53,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/whoami:latest
-            ghcr.io/${{ github.repository_owner }}/whoami:${{ github.sha }}
+              ghcr.io/${{ toLower(github.repository_owner) }}/whoami:latest
+              ghcr.io/${{ toLower(github.repository_owner) }}/whoami:${{ github.sha }}
 
       - name: Upload image info
         run: |

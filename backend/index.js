@@ -19,8 +19,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Basic middleware and security
-// Respect TRUST_PROXY env var; default false to avoid permissive trust in dev/test
-app.set('trust proxy', process.env.TRUST_PROXY === 'true');
+// Respect TRUST_PROXY env var; default to true in production (common platform setups
+// such as Render/Heroku put the app behind a proxy and set X-Forwarded-* headers).
+// You can override by setting TRUST_PROXY explicitly to 'true' or 'false'.
+const trustProxyEnv = process.env.TRUST_PROXY;
+const trustProxy = (typeof trustProxyEnv !== 'undefined') ? (trustProxyEnv === 'true') : (process.env.NODE_ENV === 'production');
+app.set('trust proxy', trustProxy);
 app.use(helmet());
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));

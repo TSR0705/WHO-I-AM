@@ -58,6 +58,10 @@ Notes & production tips
 - Configure provider health checks to use `/healthz`.
 - For metrics, configure your monitoring system to scrape `/metrics`.
 
+Proxy / geolocation notes
+- Many hosting platforms (Render, Heroku, etc.) place your app behind a proxy/load-balancer. The app will attempt to read the client's IP from the `X-Forwarded-For` header when `trust proxy` is enabled. By default the backend enables `trust proxy` in production, but you can explicitly set `TRUST_PROXY=true` in the Render service environment variables to be explicit.
+- If the server cannot determine a geo location (for example, because the IP is private or the provider returns no data), the frontend will not show the map until the browser provides coordinates. You can set up an external geo provider (set `GEO_PROVIDER` and `GEO_API_KEY` as env vars) for more accurate results.
+
 If you want, I can also:
 
 - Add a workflow secret template or a GitHub Actions step to publish a release on push to `main`.

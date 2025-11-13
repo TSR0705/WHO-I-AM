@@ -1,0 +1,30 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  whoami:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: whoami:latest
+    environment:
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: "production"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/healthz || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  redis-data:

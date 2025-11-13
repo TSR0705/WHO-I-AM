@@ -1,48 +1,199 @@
+/* Theme variables and single-layer gradient background architecture
+   - body holds a solid background-color to avoid color seams
+   - .main hosts the single-layer gradient that fills the viewport
+   - Switching themes toggles CSS variables and classes on <html>/<body>
+*/
+:root {
+  /* Dark default values (can be overridden by body.light or html.light) */
+  --bg-color: #0f2027; /* used as a fallback solid background */
+  --main-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  --text: #fdfeff;
+  --muted: #9aa6b2;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-shadow: rgba(2,6,23,0.6);
+  --transition-fast: 250ms;
+  --transition-slow: 420ms;
+}
+
+/* Light theme overrides (user-specified) */
+html.light, body.light {
+  --main-gradient: linear-gradient(135deg, #00617e, #95a3a6, #ffffff);
+  --text: #0f1720;
+  --muted: #52606a;
+  --card-bg: #d0f8ff;
+  --card-shadow: rgba(0,0,0,0.59);
+}
+
+/* Dark theme overrides (user-specified) */
+html.dark, body.dark {
+  --main-gradient: linear-gradient(135deg, #000000, #000000, #2c5364);
+  --bg-top: #000000; /* solid top band color requested */
+  --text: #ffffff;
+  --muted: #d9ecff;
+  --card-bg: #1f1b1b;
+  --card-shadow: rgb(7 223 251);
+}
+
+/* Base page shell */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: var(--bg);
+  /* Make body transparent so the .main gradient fully controls the page background
+     and removes the unwanted fallback color that was showing at page edges. */
+  background-color: transparent;
   color: var(--text);
   margin: 0;
   padding: 0;
-  transition: background 0.3s, color 0.3s;
+  min-height: 100vh;
+  transition: background-color var(--transition-slow) ease, color var(--transition-fast) ease;
 }
-:root {
-  --bg: #f6f8fa;
-  --text: #222;
-  --card-bg: #fff;
-  --card-shadow: rgba(0,0,0,0.08);
+
+/* The .main element holds the single-layer gradient and fills the viewport */
+.main {
+  background: var(--main-gradient);
+  min-height: 100vh;
+  transition: background var(--transition-slow) ease;
 }
-body.dark {
-  --bg: #181c20;
-  --text: #f6f8fa;
-  --card-bg: #23272f;
-  --card-shadow: rgba(0,0,0,0.3);
+
+/* Top band: render a solid band at the top using --bg-top to satisfy the
+   user's request to place the 'bg color' at the top. This avoids seams while
+   still keeping the main gradient as the single background layer. */
+.main::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 120px; /* adjust if needed */
+  background: var(--bg-top, transparent);
+  z-index: 0;
+}
+
+/* Ensure .main children render above the top band */
+.main > .container {
+  position: relative;
+  z-index: 1;
 }
 .container {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 16px;
+  max-width: 1100px;
+  margin: 0px auto;
+  padding: 18px;
   text-align: center;
 }
+.site-header h1 {
+  margin: 0;
+  font-size: 2.1rem;
+}
+.site-header .tagline {
+  margin: 6px 0 0 0;
+  color: var(--muted);
+}
+
+.backend-status {
+  margin: 12px auto 18px auto;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 18px;
+  align-items: start;
+}
+
 .card {
   background: var(--card-bg);
-  box-shadow: 0 2px 16px var(--card-shadow);
-  border-radius: 12px;
-  padding: 24px 16px;
-  margin-bottom: 24px;
-  min-height: 180px;
-  transition: background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 6px 18px var(--card-shadow);
+  border-radius: 37px;
+  padding: 20px;
+  margin-bottom: 20px;
+  min-height: 98px;
+  transition: background var(--transition-fast) ease, box-shadow var(--transition-fast) ease, transform 0.18s;
 }
-.map-card {
-  min-height: 280px;
-  padding: 8px;
-}
+.card:hover { transform: translateY(-4px); }
+.map-column { padding: 12px; }
+.map-container { height: 440px; width: 100%; border-radius: 8px; overflow: hidden; }
 .visitor-stats {
   display: flex;
   justify-content: space-around;
   margin-top: 12px;
   font-size: 0.95rem;
 }
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  align-items: start;
+  text-align: left;
+}
+.detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.card .label {
+  font-weight: 700;
+  color: var(--muted);
+  opacity: 0.95;
+  margin-right: 8px;
+  min-width: 96px;
+}
+.card .value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#locate-btn {
+  background: linear-gradient(180deg,#10b981,#059669);
+  border-radius: 8px;
+  color: white;
+  padding: 10px 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+#locate-btn:hover { filter: brightness(0.95); }
+
+.client-detected {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.highlight {
+  box-shadow: 0 6px 18px rgba(16,185,129,0.18);
+  transform: translateY(-2px);
+}
+
+/* Skeleton loading placeholders */
+.skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border-radius: 6px; display: inline-block; }
+.skeleton-line { height: 14px; width: 100%; margin: 8px 0; opacity: 0.8; }
+.skeleton-ip { height: 36px; width: 60%; margin: 6px 0 14px 0; }
+
+/* Toasts */
+.toast-container { position: fixed; right: 18px; bottom: 18px; display:flex; flex-direction: column; gap:8px; z-index:1200; }
+.toast { background: rgba(10,10,10,0.9); color: #fff; padding:10px 14px; border-radius:8px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); font-size:0.95rem; }
+.toast.success { background: linear-gradient(90deg,#059669,#10b981); }
+.toast.error { background: linear-gradient(90deg,#dc2626,#ef4444); }
+
+/* Visually hidden for accessibility */
+.visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
+
+/* Focus states */
+button:focus { outline: 3px solid rgba(14,165,233,0.25); outline-offset: 2px; }
 .hint {
   display: none;
   color: #666;
@@ -67,7 +218,7 @@ body.dark {
   margin-top: 12px;
 }
 button {
-  background: #0078d4;
+  background: linear-gradient(180deg,#0ea5e9,#0284c7);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -80,12 +231,25 @@ button {
 button:hover {
   background: #005fa3;
 }
-@media (max-width: 500px) {
-  .container {
-    max-width: 98vw;
-    padding: 8px;
-  }
-  .card {
-    padding: 14px 4px;
-  }
+/* When theme-transition is added by JS we ensure the main/background transitions run smoothly */
+html.theme-transition .main { transition: background var(--transition-slow) ease !important; }
+html.theme-transition body { transition: background-color var(--transition-slow) ease, color var(--transition-fast) ease !important; }
+
+/* Toggle button: adapt to theme using variables */
+#toggle-mode {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+#toggle-mode:hover { filter: brightness(0.95); }
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .map-container { height: 360px; }
+}
+@media (max-width: 480px) {
+  .map-container { height: 300px; }
+  .details-grid { grid-template-columns: 1fr; }
 }

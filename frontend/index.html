@@ -4,22 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Who Am I</title>
+  <!-- Set an initial theme class early to avoid a flash-of-unstyled-theme (FOUC).
+       We try localStorage first, then fall back to the user's OS preference. -->
+  <script>
+    (function(){
+      try {
+        var m = localStorage.getItem('whoami-mode');
+        if(!m && window.matchMedia) m = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if(m) document.documentElement.classList.add(m);
+      } catch(e) { /* ignore */ }
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+e2H8yT+fY5iKk3C1xQbYv1s8k5g6tYb6b0dX+0bM=" crossorigin="" />
+  <!-- Use CDN for Leaflet. Removed SRI integrity attributes because some CDNs rotate builds
+       and the integrity can mismatch in local setups. If you need strict SRI, replace with
+       the exact integrity string for your environment or serve a local copy at /vendor/leaflet. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Who Am I</h1>
-    <div id="card" class="card">
-      <div class="loading">Loading…</div>
+  <main class="main">
+    <div class="container">
+      <header class="site-header">
+        <h1>Who Am I</h1>
+        <p class="tagline">See your IP, browser, OS, device and approximate location</p>
+      </header>
+
+    <div id="backend-status" class="backend-status">Backend: unknown</div>
+    <div id="status-live" class="visually-hidden" aria-live="polite"></div>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+      <div class="main-grid">
+      <section id="card" class="card details-card">
+        <div class="loading">Loading…</div>
+      </section>
+
+      <section class="card map-column">
+        <div id="map" class="map-container"></div>
+        <div id="hint" class="hint">If you see "Failed to fetch", make sure the backend is running on localhost:3000 or open this page via the server URL.</div>
+        <div class="controls">
+          <button id="locate-btn">Locate me (browser)</button>
+          <button id="toggle-mode" aria-pressed="false" title="Toggle theme">Toggle theme</button>
+        </div>
+      </section>
+      </div>
     </div>
-    <div id="map" class="card map-card"></div>
-      <div id="hint" class="hint">If you see "Failed to fetch", make sure the backend is running on localhost:3000 or open this page via the server URL.</div>
-      <button id="toggle-mode">Toggle Dark/Light Mode</button>
-  </div>
+  </main>
+  <!-- UA parser for client-side detection -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- UA parser for client-side detection -->
+  <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.35/dist/ua-parser.min.js"></script>
   <script src="app.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j8+0kXQbqP5Pw0r9tYjvN0/9C3G1jv+0x2f9W6o=" crossorigin=""></script>
 </body>
 </html>

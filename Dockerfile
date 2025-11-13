@@ -19,7 +19,8 @@ COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/frontend ./backend/public
 
 WORKDIR /app/backend
-RUN npm install --production
+# Install production deps and a tiny HTTP client used by healthchecks
+RUN apk add --no-cache curl && npm install --production
 
 EXPOSE 3000
 ENV NODE_ENV=production
@@ -31,3 +32,4 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD curl -fsS http://localhost:3000/healthz || exit 1

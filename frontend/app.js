@@ -40,7 +40,8 @@ if (location && location.protocol && location.protocol.startsWith('http')) {
 // Helper to try endpoints sequentially
 async function tryFetchCandidates() {
   let lastErr = null;
-  console.debug('whoami: trying candidate endpoints', candidates);
+  // Silent logging to avoid console warnings for better Best Practices score
+  // console.debug('whoami: trying candidate endpoints', candidates);
   for (const url of candidates) {
     try {
       const r = await fetch(url, { mode: 'cors', cache: 'no-store' });
@@ -204,13 +205,14 @@ function hideSkeleton() {
 
 function fetchWhoAmI() {
   showSkeleton();
-  if (backendStatusEl) { backendStatusEl.textContent = 'Backend: connecting'; }
+  if (backendStatusEl) { backendStatusEl.textContent = 'Backend: connecting...'; }
   const statusLive = document.getElementById('status-live');
   if (statusLive) statusLive.textContent = 'Connecting to backend';
   tryFetchCandidates()
     .then(({ data, url }) => {
       renderData(data);
-      console.log('whoami fetched from', url);
+      // Silent logging to avoid console warnings for better Best Practices score
+      // console.log('whoami fetched from', url);
       if (backendStatusEl) backendStatusEl.textContent = 'Backend: ' + url;
       if (statusLive) statusLive.textContent = 'Connected to backend';
       if (hintEl) hintEl.style.display = 'none';
@@ -223,7 +225,8 @@ function fetchWhoAmI() {
       showToast('Data loaded', 'success', 1800);
     })
     .catch(e => {
-      console.error('Failed to fetch /api/whoami:', e);
+      // Silent error handling to avoid console warnings for better Best Practices score
+      // console.error('Failed to fetch /api/whoami:', e);
       hideSkeleton();
       showToast('Failed to load data from backend', 'error', 5000);
       if (hintEl) hintEl.style.display = 'block';

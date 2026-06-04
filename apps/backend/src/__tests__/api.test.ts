@@ -69,6 +69,41 @@ describe('WhoAmI API Integration Tests', () => {
       expect(response.body.visits).toHaveProperty('unique');
       expect(response.body.visits).toHaveProperty('yourVisits');
     });
+
+    it('should handle simulated IP and User-Agent spoofing in sandbox mode', async () => {
+      const response = await request(app)
+        .get('/api/whoami?spoofIp=8.8.8.8&spoofUserAgent=Mozilla/5.0%20(Macintosh;%20Intel%20Mac%20OS%20X%2010_15_7)%20AppleWebKit/605.1.15%20(KHTML,%20like%20Gecko)%20Version/16.0%20Safari/605.1.15')
+        .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/115.0.0.0');
+
+      expect(response.status).toBe(200);
+      expect(response.body.ip).toBe('8.8.8.8');
+      expect(response.body.os).toContain('Mac');
+      expect(response.body.simulation.active).toBe(true);
+      expect(response.body.simulation.isSpoofedIp).toBe(true);
+      expect(response.body.simulation.isSpoofedUserAgent).toBe(true);
+    });
+
+    it('should detect User-Agent and client OS platform mismatch', async () => {
+      const response = await request(app)
+        .get('/api/whoami?clientOs=Macintosh')
+        .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/115.0.0.0');
+
+      expect(response.status).toBe(200);
+      expect(response.body.securityAudit.userAgentMismatch).toBe(true);
+    });
+
+    it('should parse and report proxy forwarding headers', async () => {
+      const response = await request(app)
+        .get('/api/whoami')
+        .set('Via', '1.1 proxy-gateway')
+        .set('X-Forwarded-For', '203.0.113.195, 70.41.3.18');
+
+      expect(response.status).toBe(200);
+      expect(response.body.proxy.hasProxyHeaders).toBe(true);
+      expect(response.body.proxy.parsedHeaders).toHaveProperty('via', '1.1 proxy-gateway');
+      expect(response.body.proxy.parsedHeaders).toHaveProperty('x-forwarded-for', '203.0.113.195, 70.41.3.18');
+      expect(response.body.proxy.rawForwardedCount).toBe(2);
+    });
   });
 
   describe('POST /api/fingerprint', () => {

@@ -1,0 +1,68 @@
+{
+  "ip": {
+    "name": "Public IP Address",
+    "description": "Your IP address is a unique numerical label assigned to your internet connection by your Internet Service Provider (ISP). Think of it like a mailing address for your computer on the global internet.",
+    "risk": "Websites can use your IP to track your activity across different browsing sessions, determine your general physical location (city/country), and identify your Internet Service Provider.",
+    "mitigation": "You can hide your real IP address by using a Virtual Private Network (VPN), a secure proxy server, or the Tor browser network."
+  },
+  "browser": {
+    "name": "Browser User-Agent",
+    "description": "Your browser sends a text string called the User-Agent to every website you visit. This string tells the website what browser software you are using, its version, and your device type.",
+    "risk": "While necessary to display websites correctly, this profile narrows down your identity. When combined with other details, it contributes significantly to a unique browser fingerprint.",
+    "mitigation": "Privacy-focused browsers (like Brave or Firefox) default to generic User-Agent strings. Alternatively, you can use browser extensions to randomize your User-Agent profile."
+  },
+  "os": {
+    "name": "Operating System",
+    "description": "Your operating system (e.g. Windows, macOS, Linux, Android) is the core software managing your computer or phone. This information is broadcast to websites via headers and browser APIs.",
+    "risk": "Knowing your exact OS version helps trackers classify your device and can also expose you to target vulnerabilities specific to that operating system.",
+    "mitigation": "Using privacy configurations that report generic OS versions (e.g. reporting macOS instead of a specific sub-build) helps blend your device in with the crowd."
+  },
+  "location": {
+    "name": "Approximate Geolocation",
+    "description": "Websites look up your IP address in global databases that map IP blocks to physical coordinates. This matches your connection node to an approximate city, state, or country.",
+    "risk": "Allows sites to track your region, serve localized ads, block content (geo-blocking), and determine your approximate real-world residency.",
+    "mitigation": "Use a VPN or proxy server to route your connection through a different region, forcing databases to resolve the location of the VPN server instead of your home."
+  },
+  "webrtc": {
+    "name": "WebRTC Local IP Leak",
+    "description": "WebRTC (Web Real-Time Communication) is a browser feature that allows voice, video, and peer-to-peer sharing directly inside webpages. To establish connection, it requests your router's local network IP (e.g., 192.168.x.x).",
+    "risk": "A known security vulnerability allows scripts to bypass standard VPN tunnels using WebRTC STUN requests, exposing your real home network IP directly to third-party trackers.",
+    "mitigation": "In Firefox, you can set 'media.peerconnection.enabled' to false in about:config. In Chrome, use extensions like 'WebRTC Leak Shield' or disable WebRTC connection protocols in privacy settings."
+  },
+  "dnsleak": {
+    "name": "DNS Tunnel Leak",
+    "description": "When you type a website name (like google.com), your computer asks a Domain Name System (DNS) server to convert it to an IP address. A DNS leak occurs if these lookup requests bypass your secure VPN tunnel.",
+    "risk": "Even if your web traffic is encrypted by a VPN, leaking DNS lookups means your ISP (or local eavesdroppers) can see every single domain name you look up and visit.",
+    "mitigation": "Configure your VPN client to enforce secure DNS leaks protection, or set your system to use public, DNS-over-HTTPS (DoH) encrypted resolvers (like Cloudflare 1.1.1.1 or Google 8.8.8.8)."
+  },
+  "canvas": {
+    "name": "HTML5 Canvas Fingerprint",
+    "description": "The Canvas API is a modern browser feature used to draw graphics. Because different computers process graphic rendering slightly differently due to their graphics card (GPU) and font libraries, drawing a hidden image creates a unique text hash.",
+    "risk": "This acts as a cookie-less tracking ID. Even if you clear all cookies and browse in incognito mode, the canvas rendering output remains identical, allowing sites to recognize your hardware profile across domains.",
+    "mitigation": "Use privacy extensions like 'Canvas Defender' which inject minor, random pixel noise into the rendering pipeline to break the consistency of the fingerprint hash."
+  },
+  "audio": {
+    "name": "Web Audio API Fingerprint",
+    "description": "The Web Audio API allows browsers to generate and process sound. By synthesizing a high-frequency sound wave in the background, trackers measure minor mathematical variations in how your audio hardware processes mathematical signals.",
+    "risk": "Like Canvas rendering, this operates as a hardware-specific fingerprint that cannot be erased by clearing standard cookies or using private browser tabs.",
+    "mitigation": "Disable or restrict Web Audio nodes inside privacy extensions, or use browsers that automatically block or randomize sound synthesis contexts."
+  },
+  "vpnOrTor": {
+    "name": "Anonymization Route Audit",
+    "description": "Checks if your IP address matches subnets owned by public cloud hosting systems (like AWS, Azure, DigitalOcean) or known Tor exit relay nodes.",
+    "risk": "Anti-bot firewalls and streaming sites often block hosting IPs and Tor nodes, flagging them as scraper bots, automated spiders, or anonymous proxy bypasses.",
+    "mitigation": "If using Tor is required, configure bridges to obscure exit ranges. If using VPNs, choose providers that route through residential IP networks instead of standard data centers."
+  },
+  "proxyHeaders": {
+    "name": "Proxy Forwarding Headers",
+    "description": "When you route web traffic through a proxy server, the proxy often adds forwarding headers (like 'Via' or 'X-Forwarded-For') to inform the destination server about the connection path.",
+    "risk": "Leaking these headers exposes that you are routing your traffic and can leak your real, unproxied IP address, defeating the purpose of the proxy server.",
+    "mitigation": "Use high-anonymity (Elite) proxies that scrub these headers completely before passing requests to destination servers."
+  },
+  "userAgentMismatch": {
+    "name": "User-Agent Fingerprint Mismatch",
+    "description": "Compares your HTTP User-Agent string against the underlying browser APIs (like navigator.platform or screen capabilities). If they don't match, it means a browser is pretending to be a different device.",
+    "risk": "Commonly flagged by security systems. If a bot or browser extension spoofs the User-Agent header to pretend it is an iPhone, but the screen coordinates or OS variables match a desktop, it is flagged as suspicious spoofing.",
+    "mitigation": "Ensure your browser spoofers or privacy utilities modify all client-side JavaScript APIs (like navigator.userAgent and navigator.platform) in tandem with HTTP headers to prevent discrepancies."
+  }
+}

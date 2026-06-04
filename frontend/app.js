@@ -11,9 +11,25 @@ const candidates = [];
 const localBackends = [
   'http://localhost:3000/api/whoami',
   'http://127.0.0.1:3000/api/whoami',
+  'http://localhost:3001/api/whoami',
+  'http://127.0.0.1:3001/api/whoami',
   'http://localhost:3002/api/whoami',
   'http://localhost:3003/api/whoami'
 ];
+
+// Helper to escape HTML characters for basic XSS prevention
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
 
 if (location && location.protocol && location.protocol.startsWith('http')) {
   // If the frontend is served on a different port than the backend (e.g., :8000),
@@ -75,17 +91,17 @@ function isPrivateIp(ip) {
 function renderData(data) {
   card.innerHTML = `
     <div class="details-grid">
-      <div class="detail-row"><span class="label">IP:</span><span id="ip-value" class="value">${data.ip}</span></div>
-      <div class="detail-row"><span class="label">Browser:</span><span id="browser-value" class="value">${data.browser}</span></div>
-      <div class="detail-row"><span class="label">OS:</span><span id="os-value" class="value">${data.os}</span></div>
-      <div class="detail-row"><span class="label">Device:</span><span id="device-value" class="value">${data.device}</span></div>
-      <div class="detail-row"><span class="label">Location:</span><span id="location-value" class="value">${data.location.city || '-'}, ${data.location.region || '-'}, ${data.location.country || '-'}</span></div>
+      <div class="detail-row"><span class="label">IP:</span><span id="ip-value" class="value">${escapeHTML(data.ip)}</span></div>
+      <div class="detail-row"><span class="label">Browser:</span><span id="browser-value" class="value">${escapeHTML(data.browser)}</span></div>
+      <div class="detail-row"><span class="label">OS:</span><span id="os-value" class="value">${escapeHTML(data.os)}</span></div>
+      <div class="detail-row"><span class="label">Device:</span><span id="device-value" class="value">${escapeHTML(data.device)}</span></div>
+      <div class="detail-row"><span class="label">Location:</span><span id="location-value" class="value">${escapeHTML(data.location.city || '-')}, ${escapeHTML(data.location.region || '-')}, ${escapeHTML(data.location.country || '-')}</span></div>
       <div class="detail-row"><span class="label">Coords:</span><span id="coords-value" class="value">${(data.location.latitude != null && data.location.longitude != null) ? `${data.location.latitude.toFixed(4)}, ${data.location.longitude.toFixed(4)}` : 'Not available'}</span></div>
     </div>
     <div class="visitor-stats">
-      <div><strong>Total:</strong> ${data.visits.total}</div>
-      <div><strong>Unique:</strong> ${data.visits.unique}</div>
-      <div><strong>Your visits:</strong> ${data.visits.yourVisits}</div>
+      <div><strong>Total:</strong> ${escapeHTML(data.visits.total)}</div>
+      <div><strong>Unique:</strong> ${escapeHTML(data.visits.unique)}</div>
+      <div><strong>Your visits:</strong> ${escapeHTML(data.visits.yourVisits)}</div>
     </div>
     <div class="client-detected" id="client-detected">Client: detecting…</div>
   `;
@@ -106,10 +122,10 @@ function renderData(data) {
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(window._whoami_map);
         window._whoami_marker = L.marker([data.location.latitude, data.location.longitude]).addTo(window._whoami_map);
-        window._whoami_marker.bindPopup(`<strong>${data.ip}</strong><br>${data.location.city || ''} ${data.location.region || ''} ${data.location.country || ''}`).openPopup();
+        window._whoami_marker.bindPopup(`<strong>${escapeHTML(data.ip)}</strong><br>${escapeHTML(data.location.city || '')} ${escapeHTML(data.location.region || '')} ${escapeHTML(data.location.country || '')}`).openPopup();
       } else {
         window._whoami_marker.setLatLng([data.location.latitude, data.location.longitude]);
-        window._whoami_marker.getPopup().setContent(`<strong>${data.ip}</strong><br>${data.location.city || ''} ${data.location.region || ''} ${data.location.country || ''}`);
+        window._whoami_marker.getPopup().setContent(`<strong>${escapeHTML(data.ip)}</strong><br>${escapeHTML(data.location.city || '')} ${escapeHTML(data.location.region || '')} ${escapeHTML(data.location.country || '')}`);
         window._whoami_map.setView([data.location.latitude, data.location.longitude], 12);
       }
 
@@ -163,7 +179,7 @@ function useCoords(lat, lon, sourceLabel = 'browser') {
     } else {
       window._whoami_marker.setLatLng([lat, lon]);
     }
-    window._whoami_marker.bindPopup(`<strong>${window._whoami_lastData ? window._whoami_lastData.ip : 'You'}</strong><br/>(${sourceLabel})`).openPopup();
+    window._whoami_marker.bindPopup(`<strong>${window._whoami_lastData ? escapeHTML(window._whoami_lastData.ip) : 'You'}</strong><br/>(${escapeHTML(sourceLabel)})`).openPopup();
     window._whoami_map.setView([lat, lon], 12);
     setTimeout(() => { try { window._whoami_map.invalidateSize(); } catch (e) {} }, 200);
   } catch (e) {
@@ -173,7 +189,7 @@ function useCoords(lat, lon, sourceLabel = 'browser') {
 }
 
 function renderError(err) {
-  card.innerHTML = `<div id="error">${err}</div>`;
+  card.innerHTML = `<div id="error">${escapeHTML(err)}</div>`;
 }
 
 // Toast helper

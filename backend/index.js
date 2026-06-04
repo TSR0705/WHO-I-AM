@@ -6,6 +6,7 @@ const requestIp = require('request-ip');
 const UAParser = require('ua-parser-js');
 const geoip = require('geoip-lite');
 const fs = require('fs');
+const fsPromises = fs.promises;
 const path = require('path');
 
 const Redis = require('ioredis');
@@ -92,6 +93,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Local cache for external geo client with TTL
+const geoCache = new Map();
+const GEO_TTL_MS = Number(process.env.GEO_CACHE_TTL_MS || 5 * 60 * 1000);
+
 // Serve static frontend if present in ./public
 const publicDir = path.join(__dirname, 'public');
 if (fs.existsSync(publicDir)) {
@@ -100,26 +105,26 @@ if (fs.existsSync(publicDir)) {
 
 // Simple file-based persistence for visitor counts (fallback)
 const VISITS_FILE = path.join(__dirname, 'visits.json');
-function readVisits() {
+async function readVisits() {
   try {
-    const raw = fs.readFileSync(VISITS_FILE, 'utf8');
+    const raw = await fsPromises.readFile(VISITS_FILE, 'utf8');
     return JSON.parse(raw);
   } catch (e) {
     return { total: 0, byIp: {} };
   }
 }
 
-function writeVisits(data) {
+async function writeVisits(data) {
   try {
-    fs.writeFileSync(VISITS_FILE, JSON.stringify(data, null, 2));
+    await fsPromises.writeFile(VISITS_FILE, JSON.stringify(data, null, 2));
   } catch (e) {
     logger.error({ err: e }, 'Failed to write visits file');
   }
 }
 
-// Ensure visits file exists
+// Ensure visits file exists (synchronous check/write on startup is acceptable)
 if (!fs.existsSync(VISITS_FILE)) {
-  writeVisits({ total: 0, byIp: {} });
+  fs.writeFileSync(VISITS_FILE, JSON.stringify({ total: 0, byIp: {} }, null, 2));
 }
 
 // Redis client (optional). If REDIS_URL is not provided, we fall back to file storage.
@@ -152,11 +157,11 @@ async function incrementVisitsRedis(ip) {
 }
 
 async function incrementVisitsFile(ip) {
-  const visits = readVisits();
+  const visits = await readVisits();
   visits.total = (visits.total || 0) + 1;
   visits.byIp = visits.byIp || {};
   visits.byIp[ip] = (visits.byIp[ip] || 0) + 1;
-  writeVisits(visits);
+  await writeVisits(visits);
   return { total: visits.total, unique: Object.keys(visits.byIp).length, yourVisits: visits.byIp[ip] || 0 };
 }
 
@@ -173,11 +178,9 @@ async function incrementVisits(ip) {
 }
 
 app.get('/api/whoami', async (req, res) => {
-  // Get IP. Prefer X-Forwarded-For first (may contain comma list), then request-ip helpers.
-  const rawForward = req.headers['x-forwarded-for'];
-  let ipRaw = '';
-  if (rawForward) ipRaw = String(rawForward).split(',')[0].trim();
-  else ipRaw = (req.clientIp || requestIp.getClientIp(req) || req.connection?.remoteAddress || req.socket?.remoteAddress || req.ip || '') + '';
+  // Get IP. Securely resolve using Express's trust proxy validated IP (req.ip),
+  // falling back to requestIp helper or remoteAddress.
+  let ipRaw = req.ip || req.clientIp || '';
   // Normalize IPv4-mapped IPv6 and loopback
   let ip = ipRaw.replace(/^::ffff:/, '').replace(/^\[::1\]$|^::1$/, '127.0.0.1');
 
@@ -194,10 +197,6 @@ app.get('/api/whoami', async (req, res) => {
 
   // Get location (may be empty for private IPs). Use optional external provider when configured.
   let location = { city: '', region: '', country: '', latitude: null, longitude: null };
-
-  // Simple cached external geo client with timeout and TTL (5 minutes)
-  const geoCache = global.__whoami_geo_cache || (global.__whoami_geo_cache = new Map());
-  const GEO_TTL_MS = Number(process.env.GEO_CACHE_TTL_MS || 5 * 60 * 1000);
 
   async function fetchWithTimeout(url, opts = {}, ms = 3000) {
     const ac = new AbortController();
@@ -281,7 +280,7 @@ app.get('/api/visits', async (req, res) => {
       const unique = Number(await redis.hlen('visits:byIp') || 0);
       return res.json({ total, unique });
     }
-    const visits = readVisits();
+    const visits = await readVisits();
     return res.json({ total: visits.total || 0, unique: Object.keys(visits.byIp || {}).length });
   } catch (e) {
     logger.error({ err: e }, 'Failed to read visits');
@@ -303,7 +302,10 @@ app.get('/health', (req, res) => {
 // Readiness: checks Redis if configured
 app.get('/ready', (req, res) => {
   if (process.env.REDIS_URL) {
-    return res.json({ ready: redisReady });
+    if (!redisReady) {
+      return res.status(503).json({ ready: false, status: 'Redis connection down' });
+    }
+    return res.json({ ready: true });
   }
   return res.json({ ready: true });
 });

@@ -1,48 +1,40 @@
-// Load local env when present (dev only). This is safe because .env is in .gitignore.
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const requestIp = require('request-ip');
-const UAParser = require('ua-parser-js');
-const geoip = require('geoip-lite');
-const fs = require('fs');
-const fsPromises = fs.promises;
-const path = require('path');
+import dotenv from 'dotenv';
+dotenv.config();
 
-const Redis = require('ioredis');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const pino = require('pino');
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import requestIp from 'request-ip';
+import UAParser from 'ua-parser-js';
+// @ts-ignore
+import geoip from 'geoip-lite';
+import fs from 'fs';
+import path from 'path';
+import Redis from 'ioredis';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import pino from 'pino';
+import * as client from 'prom-client';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-// Basic middleware and security
-// Respect TRUST_PROXY env var; default to true in production (common platform setups
-// such as Render/Heroku put the app behind a proxy and set X-Forwarded-* headers).
-// You can override by setting TRUST_PROXY explicitly to 'true' or 'false'.
-// Determine trust proxy setting:
-// - If TRUST_PROXY is explicitly provided, accept numeric (count) or boolean-like values.
-// - Otherwise default to trusting a single proxy in production (1) which is safer
-//   than the permissive `true` value and satisfies express-rate-limit validation.
+// Respect trust proxy settings
 const trustProxyEnv = process.env.TRUST_PROXY;
-let trustProxy;
+let trustProxy: string | number | boolean;
 if (typeof trustProxyEnv !== 'undefined') {
-  // Allow numeric values (e.g. '1') or boolean-like strings ('true'/'false')
   if (/^\d+$/.test(trustProxyEnv)) {
     trustProxy = Number(trustProxyEnv);
   } else {
     trustProxy = trustProxyEnv === 'true';
   }
 } else {
-  // Default to trusting one proxy in production (common platforms like Render)
   trustProxy = (process.env.NODE_ENV === 'production') ? 1 : false;
 }
 app.set('trust proxy', trustProxy);
-// Configure Helmet with a Content Security Policy that allows the CDN hosts
-// we use for Leaflet and UAParser, and allows images from OpenStreetMap tiles.
+
+// Content Security Policy
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -57,17 +49,17 @@ app.use(helmet({
     }
   }
 }));
+
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(requestIp.mw());
 
-// Rate limiter for API
+// Rate Limiter
 app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 
-// Prometheus metrics
-const client = require('prom-client');
+// Telemetry
 const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics({ timeout: 5000 });
+collectDefaultMetrics();
 
 const httpRequestsTotal = new client.Counter({
   name: 'whoami_http_requests_total',
@@ -82,8 +74,7 @@ const httpRequestDurationSeconds = new client.Histogram({
   buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5]
 });
 
-// Metrics middleware: increment counters and observe duration
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const end = httpRequestDurationSeconds.startTimer({ method: req.method, path: req.path });
   res.on('finish', () => {
     httpRequestsTotal.inc({ method: req.method, path: req.path, status: String(res.statusCode) });
@@ -93,19 +84,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Local cache for external geo client with TTL
-const geoCache = new Map();
+// Cache map
+const geoCache = new Map<string, any>();
 const GEO_TTL_MS = Number(process.env.GEO_CACHE_TTL_MS || 5 * 60 * 1000);
 
-// Serve static frontend if present in ./public
-const publicDir = path.join(__dirname, 'public');
-if (fs.existsSync(publicDir)) {
-  app.use(express.static(publicDir));
-}
-
-// Simple file-based persistence for visitor counts (fallback)
+// Simple fallback storage
 const VISITS_FILE = path.join(__dirname, 'visits.json');
-async function readVisits() {
+const fsPromises = fs.promises;
+
+async function readVisits(): Promise<{ total: number; byIp: Record<string, number> }> {
   try {
     const raw = await fsPromises.readFile(VISITS_FILE, 'utf8');
     return JSON.parse(raw);
@@ -114,7 +101,7 @@ async function readVisits() {
   }
 }
 
-async function writeVisits(data) {
+async function writeVisits(data: { total: number; byIp: Record<string, number> }) {
   try {
     await fsPromises.writeFile(VISITS_FILE, JSON.stringify(data, null, 2));
   } catch (e) {
@@ -122,20 +109,17 @@ async function writeVisits(data) {
   }
 }
 
-// Ensure visits file exists (synchronous check/write on startup is acceptable)
+// Ensure visits file exists
 if (!fs.existsSync(VISITS_FILE)) {
   fs.writeFileSync(VISITS_FILE, JSON.stringify({ total: 0, byIp: {} }, null, 2));
 }
 
-// Redis client (optional). If REDIS_URL is not provided, we fall back to file storage.
-let redis;
+// Redis setup
+let redis: Redis | null = null;
 let redisReady = false;
 if (process.env.REDIS_URL) {
-  // Configure ioredis with sensible reconnection policy
   redis = new Redis(process.env.REDIS_URL, {
-    // reconnect delay: linear backoff up to 2s
     retryStrategy: (times) => Math.min(50 * times, 2000),
-    // do not fail commands when connection is down; let us handle fallback
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
   });
@@ -144,8 +128,8 @@ if (process.env.REDIS_URL) {
   redis.on('end', () => { redisReady = false; logger.info('Redis connection closed'); });
 }
 
-async function incrementVisitsRedis(ip) {
-  // Atomic increments in Redis
+async function incrementVisitsRedis(ip: string) {
+  if (!redis) throw new Error('Redis not initialized');
   await redis.incr('visits:total');
   await redis.hincrby('visits:byIp', ip, 1);
   const [total, unique, yourVisits] = await Promise.all([
@@ -156,7 +140,7 @@ async function incrementVisitsRedis(ip) {
   return { total: Number(total || 0), unique: Number(unique || 0), yourVisits: Number(yourVisits || 0) };
 }
 
-async function incrementVisitsFile(ip) {
+async function incrementVisitsFile(ip: string) {
   const visits = await readVisits();
   visits.total = (visits.total || 0) + 1;
   visits.byIp = visits.byIp || {};
@@ -165,7 +149,7 @@ async function incrementVisitsFile(ip) {
   return { total: visits.total, unique: Object.keys(visits.byIp).length, yourVisits: visits.byIp[ip] || 0 };
 }
 
-async function incrementVisits(ip) {
+async function incrementVisits(ip: string) {
   if (redis && redisReady) {
     try {
       return await incrementVisitsRedis(ip);
@@ -177,28 +161,21 @@ async function incrementVisits(ip) {
   return incrementVisitsFile(ip);
 }
 
-app.get('/api/whoami', async (req, res) => {
-  // Get IP. Securely resolve using Express's trust proxy validated IP (req.ip),
-  // falling back to requestIp helper or remoteAddress.
-  let ipRaw = req.ip || req.clientIp || '';
-  // Normalize IPv4-mapped IPv6 and loopback
+// Routes
+app.get('/api/whoami', async (req: Request, res: Response) => {
+  const ipRaw = req.ip || (req as any).clientIp || '';
   let ip = ipRaw.replace(/^::ffff:/, '').replace(/^\[::1\]$|^::1$/, '127.0.0.1');
-
-  // If ip is still an IPv6 loopback representation, normalize to 127.0.0.1 for easier handling
   if (ip === '::1' || ip === '0:0:0:0:0:0:0:1') ip = '127.0.0.1';
 
-  // Get user agent info with ua-parser-js (more robust across modern browsers)
   const ua = req.headers['user-agent'] || '';
   const parsed = new UAParser(ua).getResult();
   const browser = parsed.browser && parsed.browser.name ? `${parsed.browser.name} ${parsed.browser.version || ''}`.trim() : 'Unknown';
   const os = parsed.os && parsed.os.name ? `${parsed.os.name} ${parsed.os.version || ''}`.trim() : 'Unknown';
-  // device.type can be 'mobile','tablet','console','smarttv','wearable' or undefined for desktop
   const device = parsed.device && parsed.device.type ? parsed.device.type : 'desktop';
 
-  // Get location (may be empty for private IPs). Use optional external provider when configured.
-  let location = { city: '', region: '', country: '', latitude: null, longitude: null };
+  let location = { city: '', region: '', country: '', latitude: null as number | null, longitude: null as number | null };
 
-  async function fetchWithTimeout(url, opts = {}, ms = 3000) {
+  async function fetchWithTimeout(url: string, opts: any = {}, ms = 3000) {
     const ac = new AbortController();
     const id = setTimeout(() => ac.abort(), ms);
     try {
@@ -211,18 +188,18 @@ app.get('/api/whoami', async (req, res) => {
     }
   }
 
-  async function getExternalGeo(ip) {
+  async function getExternalGeo(ipAddress: string) {
     if (!process.env.GEO_PROVIDER || !process.env.GEO_API_KEY) return null;
-    const key = `${process.env.GEO_PROVIDER}:${ip}`;
+    const key = `${process.env.GEO_PROVIDER}:${ipAddress}`;
     const cached = geoCache.get(key);
     if (cached && (Date.now() - cached.ts) < GEO_TTL_MS) return cached.value;
 
     try {
       if (process.env.GEO_PROVIDER === 'ipapi') {
-        const url = `https://ipapi.co/${ip}/json/?key=${process.env.GEO_API_KEY}`;
+        const url = `https://ipapi.co/${ipAddress}/json/?key=${process.env.GEO_API_KEY}`;
         const resp = await fetchWithTimeout(url, {}, 3000);
         if (!resp.ok) throw new Error(`geo provider status ${resp.status}`);
-        const j = await resp.json();
+        const j = await resp.json() as any;
         const val = {
           city: j.city || '',
           region: j.region || j.region_code || '',
@@ -241,7 +218,6 @@ app.get('/api/whoami', async (req, res) => {
   }
 
   try {
-    // Do not call external geo providers for localhost or private IPs
     const privateIpRegex = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])|::1$|::ffff:127\.)/;
     if (!privateIpRegex.test(ip) && process.env.GEO_PROVIDER && process.env.GEO_API_KEY) {
       const ext = await getExternalGeo(ip);
@@ -253,7 +229,6 @@ app.get('/api/whoami', async (req, res) => {
     logger.warn({ err: e }, 'External geo lookup failed, falling back to geoip-lite');
   }
 
-  // Fallback to geoip-lite (best-effort). geoip-lite returns empty for private/localhost IPs.
   if (!location.latitude || !location.longitude) {
     const geo = geoip.lookup(ip) || {};
     location.city = location.city || geo.city || '';
@@ -263,7 +238,6 @@ app.get('/api/whoami', async (req, res) => {
     location.longitude = location.longitude || (geo.ll ? geo.ll[1] : null);
   }
 
-  // Update visits (Redis if available, otherwise file)
   try {
     const v = await incrementVisits(ip);
     res.json({ ip, browser, os, device, location, visits: { total: v.total, unique: v.unique, yourVisits: v.yourVisits } });
@@ -273,7 +247,7 @@ app.get('/api/whoami', async (req, res) => {
   }
 });
 
-app.get('/api/visits', async (req, res) => {
+app.get('/api/visits', async (req: Request, res: Response) => {
   try {
     if (redis && redisReady) {
       const total = Number(await redis.get('visits:total') || 0);
@@ -288,19 +262,11 @@ app.get('/api/visits', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  // If frontend is built into public, serve it
-  const indexPath = path.join(publicDir, 'index.html');
-  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
-  return res.send('Who Am I API is running.');
-});
-// Health endpoint for orchestrators
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady });
 });
 
-// Readiness: checks Redis if configured
-app.get('/ready', (req, res) => {
+app.get('/ready', (req: Request, res: Response) => {
   if (process.env.REDIS_URL) {
     if (!redisReady) {
       return res.status(503).json({ ready: false, status: 'Redis connection down' });
@@ -310,12 +276,9 @@ app.get('/ready', (req, res) => {
   return res.json({ ready: true });
 });
 
-// Additional endpoints required by many platforms and observability tools
-// /healthz is a commonly used liveness probe path — alias to /health
-app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady }));
+app.get('/healthz', (req: Request, res: Response) => res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady }));
 
-// Simple metrics endpoint for basic monitoring (JSON). Replace with Prometheus exporter for production.
-app.get('/metrics', async (req, res) => {
+app.get('/metrics', async (req: Request, res: Response) => {
   try {
     res.set('Content-Type', client.register.contentType);
     const metrics = await client.register.metrics();
@@ -326,13 +289,11 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
-// Start server with retry on EADDRINUSE
-function startServer(startPort, maxAttempts = 10) {
+function startServer(startPort: number, maxAttempts = 10) {
   let attempts = 0;
-  function tryListen(port) {
+  function tryListen(port: number) {
     const s = app.listen(port, () => {
       console.log(`Server running on port ${port}`);
-      // attach shutdown handlers to this server instance
       function shutdown() {
         console.log('Shutting down...');
         s.close(() => {
@@ -345,7 +306,7 @@ function startServer(startPort, maxAttempts = 10) {
       process.on('SIGINT', shutdown);
     });
 
-    s.on('error', (err) => {
+    s.on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
         attempts += 1;
         if (attempts >= maxAttempts) {
@@ -363,10 +324,8 @@ function startServer(startPort, maxAttempts = 10) {
   tryListen(startPort);
 }
 
-// Only start server when run directly. This allows importing `app` in tests without listening.
 if (require.main === module) {
   startServer(Number(process.env.PORT) || PORT);
 }
 
-// Export app for testing and for other modules
-module.exports = app;
+export default app;

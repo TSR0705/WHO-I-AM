@@ -1,4 +1,16 @@
 services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: whoami_user
+      POSTGRES_PASSWORD: whoami_password
+      POSTGRES_DB: whoami_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -7,24 +19,36 @@ services:
     volumes:
       - redis-data:/data
 
-  whoami:
+  backend:
     build:
-      context: .
+      context: ./apps/backend
       dockerfile: Dockerfile
-    image: whoami:latest
-    environment:
-      REDIS_URL: "redis://redis:6379"
-      NODE_ENV: "production"
     ports:
-      - "3000:3000"
+      - "3001:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://whoami_user:whoami_password@db:5432/whoami_db
     depends_on:
+      - db
       - redis
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/healthz || exit 1"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
+  pg-data:
   redis-data:

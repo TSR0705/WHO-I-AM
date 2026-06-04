@@ -64,6 +64,10 @@ describe('WhoAmI API Integration Tests', () => {
       expect(response.body.os).toContain('Windows');
       expect(response.body).toHaveProperty('device');
       expect(response.body).toHaveProperty('location');
+      expect(response.body).toHaveProperty('network');
+      expect(response.body.network).toHaveProperty('isp');
+      expect(response.body.network).toHaveProperty('asn');
+      expect(response.body.network).toHaveProperty('timezone');
       expect(response.body).toHaveProperty('visits');
       expect(response.body.visits).toHaveProperty('total');
       expect(response.body.visits).toHaveProperty('unique');

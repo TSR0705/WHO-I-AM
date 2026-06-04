@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import dns from 'dns';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import requestIp from 'request-ip';
@@ -55,6 +56,36 @@ async function initDatabase() {
   } catch (err) {
     logger.error({ err }, 'Failed to initialize Postgres database');
   }
+}
+
+function getNetworkDetails(ipAddress: string): Promise<{ isp: string; asn: string }> {
+  return new Promise((resolve) => {
+    if (ipAddress === '127.0.0.1' || ipAddress === '::1') {
+      return resolve({ isp: 'Local Loopback Connection', asn: 'AS0' });
+    }
+    
+    dns.reverse(ipAddress, (err, hostnames) => {
+      if (err || !hostnames || hostnames.length === 0) {
+        return resolve({ isp: 'Unknown ISP / Network', asn: 'Unknown' });
+      }
+      
+      const host = hostnames[0];
+      let isp = host;
+      let asn = 'Unknown';
+      
+      if (host.includes('comcast')) { isp = 'Comcast Cable'; asn = 'AS7922'; }
+      else if (host.includes('verizon')) { isp = 'Verizon Communications'; asn = 'AS701'; }
+      else if (host.includes('att') || host.includes('sbcglobal')) { isp = 'AT&T Internet'; asn = 'AS7018'; }
+      else if (host.includes('charter') || host.includes('rr.com')) { isp = 'Charter Communications'; asn = 'AS20115'; }
+      else if (host.includes('centurylink')) { isp = 'CenturyLink'; asn = 'AS209'; }
+      else if (host.includes('amazonaws')) { isp = 'Amazon Web Services'; asn = 'AS16509'; }
+      else if (host.includes('google')) { isp = 'Google LLC'; asn = 'AS15169'; }
+      else if (host.includes('cloud.google')) { isp = 'Google Cloud Platform'; asn = 'AS36492'; }
+      else if (host.includes('digitalocean')) { isp = 'DigitalOcean LLC'; asn = 'AS14061'; }
+      
+      resolve({ isp, asn });
+    });
+  });
 }
 
 const app = express();
@@ -344,11 +375,22 @@ app.get('/api/whoami', async (req: Request, res: Response) => {
     location.longitude = location.longitude || (geo.ll ? geo.ll[1] : null);
   }
 
+  const geo = geoip.lookup(ipToAudit) || {};
+  let netDetails = { isp: 'Local Loopback Connection', asn: 'AS0' };
+  try {
+    netDetails = await getNetworkDetails(ipToAudit);
+  } catch (e) { /* ignore */ }
+
   try {
     const v = await incrementVisits(ip); // Count visits using real IP
     
     res.json({
       ip: ipToAudit,
+      network: {
+        isp: netDetails.isp,
+        asn: netDetails.asn,
+        timezone: geo.timezone || 'UTC'
+      },
       browser,
       os,
       device,

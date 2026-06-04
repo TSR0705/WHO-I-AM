@@ -1,68 +1,110 @@
 {
   "ip": {
     "name": "Public IP Address",
-    "description": "Your IP address is a unique numerical label assigned to your internet connection by your Internet Service Provider (ISP). Think of it like a mailing address for your computer on the global internet.",
-    "risk": "Websites can use your IP to track your activity across different browsing sessions, determine your general physical location (city/country), and identify your Internet Service Provider.",
-    "mitigation": "You can hide your real IP address by using a Virtual Private Network (VPN), a secure proxy server, or the Tor browser network."
+    "whatChecked": "Your Public IP address, Internet Service Provider (ISP), and Autonomous System Number (ASN).",
+    "whyAccess": "Websites need your IP address to send web page data back to your device; without it, internet routing is physically impossible.",
+    "privacyImpact": "An IP acts as a semi-permanent tracking number that logs your approximate coordinates and correlates all network requests back to your home router.",
+    "realWorldExample": "Copyright holders monitor IP address lists on BitTorrent networks to identify users downloading media and issue copyright strikes.",
+    "protection": "Use a Virtual Private Network (VPN) or the Tor browser to route traffic through an encrypted tunnel, masking your real residential IP.",
+    "learnMore": "An IP (Internet Protocol) address functions like a return address on an envelope. Using proxies swaps this address for another."
   },
   "browser": {
     "name": "Browser User-Agent",
-    "description": "Your browser sends a text string called the User-Agent to every website you visit. This string tells the website what browser software you are using, its version, and your device type.",
-    "risk": "While necessary to display websites correctly, this profile narrows down your identity. When combined with other details, it contributes significantly to a unique browser fingerprint.",
-    "mitigation": "Privacy-focused browsers (like Brave or Firefox) default to generic User-Agent strings. Alternatively, you can use browser extensions to randomize your User-Agent profile."
+    "whatChecked": "The User-Agent header string which lists your browser brand, rendering engine version, and system languages.",
+    "whyAccess": "Websites query the User-Agent header to deliver custom styled pages optimized for your specific browser software (e.g. mobile vs. desktop styling).",
+    "privacyImpact": "The precise version numbers of your browser and its extensions narrow down your identity, creating a unique signature.",
+    "realWorldExample": "Websites track browser version distributions to serve targeted exploits or notice if a browser uses obsolete, vulnerable releases.",
+    "protection": "Enable generic browser headers overrides or use privacy browsers (such as Firefox or Brave) that mask details in standard requests.",
+    "learnMore": "User-Agents help developers support legacy systems, but advertising networks abuse them to construct tracking profiles."
   },
   "os": {
     "name": "Operating System",
-    "description": "Your operating system (e.g. Windows, macOS, Linux, Android) is the core software managing your computer or phone. This information is broadcast to websites via headers and browser APIs.",
-    "risk": "Knowing your exact OS version helps trackers classify your device and can also expose you to target vulnerabilities specific to that operating system.",
-    "mitigation": "Using privacy configurations that report generic OS versions (e.g. reporting macOS instead of a specific sub-build) helps blend your device in with the crowd."
+    "whatChecked": "Your system software profile (e.g., Windows 11, macOS Sequoia, Linux Kernel) and CPU architecture.",
+    "whyAccess": "Websites inspect your OS to download correct binary file installers (e.g. suggesting .exe for Windows and .dmg for macOS) and match performance rendering engines.",
+    "privacyImpact": "Exposes your device brand and sub-version, which trackers use to group your device with other similar entities in their databases.",
+    "realWorldExample": "Ad systems noticed that users browsing from macOS devices statistically buy higher-priced items, prompting sites to adjust search rankings.",
+    "protection": "Block native hardware query APIs and avoid installing system-specific customization packages that report custom device parameters.",
+    "learnMore": "Your operating system dictates font rendering styles, screen layouts, and network protocols, which websites scan on load."
   },
   "location": {
-    "name": "Approximate Geolocation",
-    "description": "Websites look up your IP address in global databases that map IP blocks to physical coordinates. This matches your connection node to an approximate city, state, or country.",
-    "risk": "Allows sites to track your region, serve localized ads, block content (geo-blocking), and determine your approximate real-world residency.",
-    "mitigation": "Use a VPN or proxy server to route your connection through a different region, forcing databases to resolve the location of the VPN server instead of your home."
+    "name": "Physical Geolocation",
+    "whatChecked": "The discrepancy between your IP-based geolocation (from local ISP databases) and your device's raw GPS sensor coordinates.",
+    "whyAccess": "IP location is checked automatically based on your network route. GPS location requests your browser's sensor permission to provide high-accuracy mapping.",
+    "privacyImpact": "While IP coordinates resolve to a city or ISP node (often 5-15 miles away), GPS location can pinpoint your exact street address within meters.",
+    "realWorldExample": "Local weather apps and food delivery sites require precise GPS access to identify your physical residence for dispatching services.",
+    "protection": "Deny browser GPS permissions to untrusted sites and toggle location services off on your system settings.",
+    "learnMore": "IP location maps are based on static IP registration records, whereas browser GPS query hardware satellites and nearby Wi-Fi router coordinates."
   },
   "webrtc": {
     "name": "WebRTC Local IP Leak",
-    "description": "WebRTC (Web Real-Time Communication) is a browser feature that allows voice, video, and peer-to-peer sharing directly inside webpages. To establish connection, it requests your router's local network IP (e.g., 192.168.x.x).",
-    "risk": "A known security vulnerability allows scripts to bypass standard VPN tunnels using WebRTC STUN requests, exposing your real home network IP directly to third-party trackers.",
-    "mitigation": "In Firefox, you can set 'media.peerconnection.enabled' to false in about:config. In Chrome, use extensions like 'WebRTC Leak Shield' or disable WebRTC connection protocols in privacy settings."
+    "whatChecked": "Local network LAN IPs (e.g. 192.168.1.x) exposed via ICE candidate protocol handshakes.",
+    "whyAccess": "WebRTC requires direct peer-to-peer data channels for lag-free video chats and audio calling, bypasses intermediate servers.",
+    "privacyImpact": "Unmasks your real internal home IP address even when your external public IP is securely wrapped inside a VPN tunnel.",
+    "realWorldExample": "Tracking engines run hidden WebRTC scripts to detect users employing cheap proxies, matching their real local subnet values.",
+    "protection": "Install a WebRTC block extension or set 'media.peerconnection.enabled' to false in Firefox advanced configuration menus.",
+    "learnMore": "WebRTC requests ICE candidates directly from the OS routing table. Since STUN queries are local, standard browser extensions fail to intercept them."
   },
   "dnsleak": {
     "name": "DNS Tunnel Leak",
-    "description": "When you type a website name (like google.com), your computer asks a Domain Name System (DNS) server to convert it to an IP address. A DNS leak occurs if these lookup requests bypass your secure VPN tunnel.",
-    "risk": "Even if your web traffic is encrypted by a VPN, leaking DNS lookups means your ISP (or local eavesdroppers) can see every single domain name you look up and visit.",
-    "mitigation": "Configure your VPN client to enforce secure DNS leaks protection, or set your system to use public, DNS-over-HTTPS (DoH) encrypted resolvers (like Cloudflare 1.1.1.1 or Google 8.8.8.8)."
+    "whatChecked": "The subnets of your active Domain Name System (DNS) resolver servers compared to your public IP range.",
+    "whyAccess": "To load website domains, your computer queries DNS servers to translate text addresses (like google.com) to numeric IP coordinates.",
+    "privacyImpact": "If your DNS queries route outside your encrypted VPN tunnel, your local ISP can log and monitor every single website domain you visit.",
+    "realWorldExample": "In countries with active censorship, ISPs intercept leaking DNS lookups to block access to specific domain names or catalog user activity logs.",
+    "protection": "Choose VPN clients with built-in DNS leak block protections and configure secure DNS-over-HTTPS (DoH) inside browser properties.",
+    "learnMore": "A DNS leak occurs when your operating system defaults to using your ISP's automatic DNS server instead of the secure DNS server provided by the VPN."
   },
   "canvas": {
     "name": "HTML5 Canvas Fingerprint",
-    "description": "The Canvas API is a modern browser feature used to draw graphics. Because different computers process graphic rendering slightly differently due to their graphics card (GPU) and font libraries, drawing a hidden image creates a unique text hash.",
-    "risk": "This acts as a cookie-less tracking ID. Even if you clear all cookies and browse in incognito mode, the canvas rendering output remains identical, allowing sites to recognize your hardware profile across domains.",
-    "mitigation": "Use privacy extensions like 'Canvas Defender' which inject minor, random pixel noise into the rendering pipeline to break the consistency of the fingerprint hash."
+    "whatChecked": "Graphic rendering differences in shapes, gradients, and font anti-aliasing weights.",
+    "whyAccess": "The Canvas API is a standard HTML5 feature used by developers to render dynamic games, images, and interactive graphics locally.",
+    "privacyImpact": "Creates a permanent, cookieless hardware tracking token. Since rendering is tied to your GPU driver, the generated text hash is highly unique.",
+    "realWorldExample": "Commercial tracker scripts embed invisible 1x1 canvas drawing traps to recognize individual users across private incognito sessions.",
+    "protection": "Use extensions that inject random pixel noise into canvas outputs to invalidate the consistency of the tracking hash.",
+    "learnMore": "Canvas fingerprinting exploits the fact that no two graphics card drivers draw curves and letters with identical sub-pixel weights."
   },
   "audio": {
-    "name": "Web Audio API Fingerprint",
-    "description": "The Web Audio API allows browsers to generate and process sound. By synthesizing a high-frequency sound wave in the background, trackers measure minor mathematical variations in how your audio hardware processes mathematical signals.",
-    "risk": "Like Canvas rendering, this operates as a hardware-specific fingerprint that cannot be erased by clearing standard cookies or using private browser tabs.",
-    "mitigation": "Disable or restrict Web Audio nodes inside privacy extensions, or use browsers that automatically block or randomize sound synthesis contexts."
+    "name": "Web Audio Fingerprint",
+    "whatChecked": "Mathematical sound wave frequency synthesis variance in your browser's audio processing pipeline.",
+    "whyAccess": "The Web Audio API allows pages to generate, synthesize, and control sound effects in games or complex web-based audio applications.",
+    "privacyImpact": "Determines a unique hardware audio profile that persists across browser sessions and operates independently of cookies.",
+    "realWorldExample": "Ad brokers cross-reference canvas and audio hashes to reconstruct cross-domain profiles of anonymous visitors.",
+    "protection": "Block or restrict audio synthesis node executions, or use browsers that automatically pad sound synthesis calculations with noise.",
+    "learnMore": "Audio fingerprinting measures mathematical differences in sound processing algorithms, which vary based on your system sound card chip."
+  },
+  "webgl": {
+    "name": "WebGL GPU Fingerprint",
+    "whatChecked": "Unmasked WebGL graphic vendor, GPU renderer specifications, and WebGL drawing buffer rendering hashes.",
+    "whyAccess": "WebGL is needed to render high-performance interactive 3D graphics (like Google Earth or web games) directly in your browser.",
+    "privacyImpact": "Exposes your exact graphics card model (e.g. NVIDIA GeForce RTX 3070, Apple M2 GPU), dramatically narrowing down your device anonymity.",
+    "realWorldExample": "Game platforms scan your GPU details to automatically configure optimal graphical settings or verify device capability indexes.",
+    "protection": "Disable WebGL inside browser configs (webgl.disabled in Firefox) or use privacy extensions that block GPU info access.",
+    "learnMore": "Trackers combine WebGL details with screen measurements to create a comprehensive device profile that identifies your hardware configuration."
   },
   "vpnOrTor": {
-    "name": "Anonymization Route Audit",
-    "description": "Checks if your IP address matches subnets owned by public cloud hosting systems (like AWS, Azure, DigitalOcean) or known Tor exit relay nodes.",
-    "risk": "Anti-bot firewalls and streaming sites often block hosting IPs and Tor nodes, flagging them as scraper bots, automated spiders, or anonymous proxy bypasses.",
-    "mitigation": "If using Tor is required, configure bridges to obscure exit ranges. If using VPNs, choose providers that route through residential IP networks instead of standard data centers."
+    "name": "Network Anonymizer Route",
+    "whatChecked": "Whether your IP address belongs to standard residential ranges, cloud hosting datacenters, or Tor exit relays.",
+    "whyAccess": "Websites inspect your connection route to verify that traffic originates from a real human device rather than an automated server bot.",
+    "privacyImpact": "Datacenter IPs and Tor relays are heavily monitored. Trackers block or flag these connections, forcing CAPTCHAs or denying service.",
+    "realWorldExample": "Streaming providers check connection ranges against database registries to block users attempting to bypass geographic licensing limitations.",
+    "protection": "Use premium VPN providers that offer residential IP proxies, or configure bridges to mask Tor exit traffic.",
+    "learnMore": "Datacenter ranges belong to hosting companies (AWS, GCP). Residential ranges belong to home connections (Comcast, AT&T), which sites trust more."
   },
-  "proxyHeaders": {
-    "name": "Proxy Forwarding Headers",
-    "description": "When you route web traffic through a proxy server, the proxy often adds forwarding headers (like 'Via' or 'X-Forwarded-For') to inform the destination server about the connection path.",
-    "risk": "Leaking these headers exposes that you are routing your traffic and can leak your real, unproxied IP address, defeating the purpose of the proxy server.",
-    "mitigation": "Use high-anonymity (Elite) proxies that scrub these headers completely before passing requests to destination servers."
+  "capabilities": {
+    "name": "Local Storage & Cookies",
+    "whatChecked": "Browser capabilities including Cookie support, LocalStorage, SessionStorage, IndexedDB, and Service Workers.",
+    "whyAccess": "Cookies and LocalStorage are standard features used to save your website preferences, login sessions, and shopping cart items.",
+    "privacyImpact": "When misused, persistent storage acts as tracking cookies. Trackers store long-term tracking IDs that identify your device across visits.",
+    "realWorldExample": "Shopping sites save persistent tracking tokens in your LocalStorage to show ads for items you viewed, even after you clear cookies.",
+    "protection": "Configure your browser to block third-party cookies and clear all site storage automatically upon closing browser windows.",
+    "learnMore": "Standard cookies are limited in size (4KB), whereas LocalStorage allows sites to save up to 5MB of persistent data on your computer."
   },
-  "userAgentMismatch": {
-    "name": "User-Agent Fingerprint Mismatch",
-    "description": "Compares your HTTP User-Agent string against the underlying browser APIs (like navigator.platform or screen capabilities). If they don't match, it means a browser is pretending to be a different device.",
-    "risk": "Commonly flagged by security systems. If a bot or browser extension spoofs the User-Agent header to pretend it is an iPhone, but the screen coordinates or OS variables match a desktop, it is flagged as suspicious spoofing.",
-    "mitigation": "Ensure your browser spoofers or privacy utilities modify all client-side JavaScript APIs (like navigator.userAgent and navigator.platform) in tandem with HTTP headers to prevent discrepancies."
+  "security": {
+    "name": "Security Configuration",
+    "whatChecked": "HTTPS connection status, Secure Context parameters, mixed-content filters, and Referrer headers leakage.",
+    "whyAccess": "HTTPS ensures your traffic is encrypted. Secure Context limits powerful APIs to safe connections. Referrer tells sites where you navigated from.",
+    "privacyImpact": "Unencrypted connections allow local networks to intercept passwords. Leaked referrers expose your exact navigation history.",
+    "realWorldExample": "A user navigating from a private portal to a public store leaks their user account ID in the Referrer URL path.",
+    "protection": "Force HTTPS-Only mode in browser settings and configure strict Referrer policies (such as 'no-referrer' or 'same-origin').",
+    "learnMore": "HTTPS establishes a secure tunnel using TLS encryption. Secure Contexts prevent dangerous features (like camera access) on insecure HTTP pages."
   }
 }

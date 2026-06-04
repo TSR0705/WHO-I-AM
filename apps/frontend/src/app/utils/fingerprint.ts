@@ -85,3 +85,84 @@ export function getWebRTCLocalIPs(onIPDetected: (ip: string) => void): void {
     // ignore
   }
 }
+
+export function getWebGLFingerprint(): { hash: string; vendor: string; renderer: string } {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    if (!gl) return { hash: 'not-supported', vendor: 'Unknown', renderer: 'Unknown' };
+    
+    // Draw simple WebGL buffer to maximize minor driver color parsing differences
+    const vertices = new Float32Array([-0.5, -0.5, 0.5, -0.5, 0.0, 0.5]);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : 'Unknown';
+    const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'Unknown';
+    
+    const dataUrl = canvas.toDataURL();
+    const hash = hashString(dataUrl + '-' + vendor + '-' + renderer);
+    return { hash, vendor, renderer };
+  } catch (e) {
+    return { hash: 'blocked', vendor: 'Unknown', renderer: 'Unknown' };
+  }
+}
+
+export interface BrowserCapabilities {
+  cookiesEnabled: boolean;
+  localStorageSupported: boolean;
+  sessionStorageSupported: boolean;
+  indexedDbSupported: boolean;
+  serviceWorkerSupported: boolean;
+  javascriptEnabled: boolean;
+}
+
+export function getBrowserCapabilities(): BrowserCapabilities {
+  let localStorageSupported = false;
+  let sessionStorageSupported = false;
+  let indexedDbSupported = false;
+  
+  try {
+    localStorageSupported = !!window.localStorage;
+  } catch (e) { /* ignore */ }
+  
+  try {
+    sessionStorageSupported = !!window.sessionStorage;
+  } catch (e) { /* ignore */ }
+
+  try {
+    indexedDbSupported = !!window.indexedDB;
+  } catch (e) { /* ignore */ }
+
+  return {
+    cookiesEnabled: navigator.cookieEnabled,
+    localStorageSupported,
+    sessionStorageSupported,
+    indexedDbSupported,
+    serviceWorkerSupported: typeof window !== 'undefined' && 'serviceWorker' in navigator,
+    javascriptEnabled: true
+  };
+}
+
+export interface SecurityConfig {
+  isHttps: boolean;
+  isSecureContext: boolean;
+  referrer: string;
+  mixedContentBlocked: boolean;
+}
+
+export function getSecurityConfiguration(): SecurityConfig {
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const isSecureContext = typeof window !== 'undefined' && !!window.isSecureContext;
+  const referrer = typeof document !== 'undefined' && document.referrer ? document.referrer : 'None';
+  
+  return {
+    isHttps,
+    isSecureContext,
+    referrer,
+    mixedContentBlocked: isHttps // If page is HTTPS, mixed active content is blocked by browser default
+  };
+}
+

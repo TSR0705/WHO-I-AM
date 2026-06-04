@@ -604,27 +604,23 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
         
         <DataGridHero {...gridCfg}>
-          <span className="text-[10px] text-neon-cyan font-mono tracking-[0.4em] uppercase block mb-2 animate-pulse-slow">
-            SYS.DIAGNOSTICS // WEB PRIVACY AUDITOR
-          </span>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-widest uppercase bg-gradient-to-b from-white via-zinc-200 to-zinc-650 bg-clip-text text-transparent filter drop-shadow-[0_0_30px_rgba(255,255,255,0.05)] select-none">
-            WHO I AM
-          </h1>
-          <p className="max-w-md mx-auto text-xs text-zinc-400 font-mono tracking-wide leading-relaxed mt-2 uppercase">
-            An interactive digital footprint analyzer. Scan browser fingerprints, WebRTC leaks, and coordinate exposure.
+          <h1>DataGrid Hero</h1>
+          <p>
+            A generative, interactive hero component built with React. Customize
+            the grid animation using the control panel.
           </p>
           <div className="buttons">
             <button 
               className="button"
               onClick={() => triggerAuditPipeline()}
             >
-              ENGAGE SCANNER
+              Get Started
             </button>
             <button
               className="button-outline"
               onClick={() => setGridPanelOpen(true)}
             >
-              GRID CONFIG (H)
+              Controls (H)
             </button>
           </div>
 

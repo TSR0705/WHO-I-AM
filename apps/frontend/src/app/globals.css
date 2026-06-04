@@ -170,13 +170,9 @@ body {
 .hero-content h1 {
   font-family: var(--font-sans), sans-serif;
   font-size: clamp(2.5rem, 8vw, var(--font-7xl));
-  font-weight: var(--font-bold);
+  font-weight: 800;
   line-height: 1.1;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #ffffff 30%, rgba(255, 255, 255, 0.7));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   filter: drop-shadow(var(--shadow-md));
 }
 
@@ -195,46 +191,39 @@ body {
 }
 
 .hero-content .button {
-  padding: 0.75rem 2rem;
-  border-radius: 0.75rem;
-  background: hsl(var(--cyan));
+  padding: 0.65rem 1.75rem;
+  border-radius: 0.375rem;
+  background: #ffffff;
   color: #02040a;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-sans), sans-serif;
   font-size: 0.85rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(0, 242, 255, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .hero-content .button:hover {
-  background: #ffffff;
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
 }
 
 .hero-content .button-outline {
-  padding: 0.75rem 2rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0.65rem 1.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
   color: #ffffff;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-sans), sans-serif;
   font-size: 0.85rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  backdrop-filter: blur(8px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .hero-content .button-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* High-tech Control Panel */
@@ -327,8 +316,8 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: hsl(var(--cyan));
-  box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  background: hsl(var(--green));
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
   cursor: pointer;
   transition: transform 0.1s ease;
 }
@@ -356,7 +345,7 @@ body {
 }
 
 .toggle-control button[aria-checked="true"] {
-  background: hsl(var(--cyan));
+  background: hsl(var(--green));
 }
 
 .toggle-control button span {
@@ -419,34 +408,19 @@ body {
 .panel-buttons button {
   flex: 1;
   padding: 0.6rem;
-  border-radius: 0.5rem;
-  font-family: var(--font-mono), monospace;
+  border-radius: 0.375rem;
+  font-family: var(--font-sans), sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
   cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   transition: all 0.2s ease;
 }
 
-.panel-buttons button:first-child {
+.panel-buttons button:hover {
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-}
-
-.panel-buttons button:first-child:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.panel-buttons button:last-child {
-  background: hsl(var(--cyan));
-  border: none;
-  color: #02040a;
-  box-shadow: 0 2px 8px rgba(0, 242, 255, 0.2);
-}
-
-.panel-buttons button:last-child:hover {
-  background: #ffffff;
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 

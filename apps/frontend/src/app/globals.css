@@ -52,7 +52,7 @@
   --fg-color: hsl(var(--foreground));
 }
 
-@keyframes cell-pulse {
+/* @keyframes cell-pulse {
   0%, 100% {
     opacity: var(--opacity-min, 0.05);
   }
@@ -62,7 +62,7 @@
   30% {
     opacity: var(--opacity-min, 0.05);
   }
-}
+} */
 
 @keyframes cell-pulse {
   from {

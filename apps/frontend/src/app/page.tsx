@@ -604,10 +604,9 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
         
         <DataGridHero {...gridCfg}>
-          <h1>DataGrid Hero</h1>
+          <h1>Who-I-Am</h1>
           <p>
-            A generative, interactive hero component built with React. Customize
-            the grid animation using the control panel.
+            Discover What The Internet Knows About You
           </p>
           <div className="buttons">
             <button 

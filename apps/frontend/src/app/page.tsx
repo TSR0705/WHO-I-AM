@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { 
   Globe, 
@@ -33,6 +33,8 @@ import RiskFindingsCard from "./components/RiskFindingsCard";
 import SimulationConsole from "./components/SimulationConsole";
 import EducationalDrawer from "./components/EducationalDrawer";
 import AuditCategoryCard from "./components/AuditCategoryCard";
+import DataGridHero from "@/components/ui/data-grid-hero";
+import GridControlPanel from "./components/GridControlPanel";
 
 // Fingerprinting & capability utilities
 import {
@@ -111,6 +113,61 @@ export default function Home() {
   const [spoofIp, setSpoofIp] = useState("");
   const [selectedUaPreset, setSelectedUaPreset] = useState("current");
   const [customUa, setCustomUa] = useState("");
+
+  // Grid Configuration States for Landing Hero
+  const [gridCfg, setGridCfg] = useState({
+    rows: 25,
+    cols: 35,
+    spacing: 4,
+    duration: 5.0,
+    color: "hsl(var(--cyan))",
+    animationType: "pulse" as "pulse" | "wave" | "random",
+    pulseEffect: true,
+    mouseGlow: true,
+    opacityMin: 0.05,
+    opacityMax: 0.5,
+    background: "transparent",
+  });
+  const [gridPanelOpen, setGridPanelOpen] = useState(false);
+
+  const randomizeGrid = useCallback(() => {
+    const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+    const colors = [
+      "hsl(var(--green))",
+      "hsl(var(--pink))",
+      "hsl(var(--cyan))",
+      "hsl(var(--yellow))",
+      "hsl(var(--orange))",
+    ];
+    const anims: ("pulse" | "wave" | "random")[] = ["pulse", "wave", "random"];
+    setGridCfg((c) => ({
+      ...c,
+      rows: Math.floor(rand(15, 35)),
+      cols: Math.floor(rand(20, 40)),
+      duration: rand(4, 9),
+      color: colors[Math.floor(Math.random() * colors.length)],
+      animationType: anims[Math.floor(Math.random() * anims.length)],
+      pulseEffect: Math.random() > 0.2,
+      mouseGlow: Math.random() > 0.3,
+      opacityMin: rand(0.02, 0.1),
+      opacityMax: rand(0.3, 0.7),
+      spacing: Math.floor(rand(2, 6)),
+      background: "transparent"
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (auditStarted) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName && target.tagName.toLowerCase() === "input") return;
+      const k = e.key.toLowerCase();
+      if (k === "h") setGridPanelOpen((v) => !v);
+      if (k === "r") randomizeGrid();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [auditStarted, randomizeGrid]);
 
   // History & Educational Drawers
   const [selectedEduKey, setSelectedEduKey] = useState<string | null>(null);
@@ -301,7 +358,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    triggerAuditPipeline();
+    // triggerAuditPipeline(); // Disabled to allow the Hero branding page to show first on load/refresh.
 
     // Trigger local WebRTC checks on initialization
     getWebRTCLocalIPs((ip) => {
@@ -643,53 +700,37 @@ export default function Home() {
 
         {/* Landing screen if audit not started */}
         {!auditStarted && (
-          <div className="max-w-3xl mx-auto text-center py-20 space-y-10 no-print">
-            <div className="inline-block p-4 bg-neon-cyan/5 border border-neon-cyan/25 rounded-3xl animate-pulse-slow shadow-2xl relative">
-              <div className="absolute inset-0 bg-neon-cyan/10 rounded-3xl blur-md" />
-              <Shield className="w-14 h-14 text-neon-cyan relative z-10" />
-            </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white uppercase font-sans leading-tight">
-                What does the internet <br />
-                <span className="bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-cyan bg-[size:200%] animate-cyber-glow bg-clip-text text-transparent">know about you?</span>
-              </h2>
-              <p className="text-xs text-zinc-400 max-w-lg mx-auto leading-relaxed font-mono">
-                Clear cookie blocking is no longer enough. Websites collect hardware hashes, check network tunnels, and query WebRTC APIs to compile unique, tracking fingerprints of your device.
+          <div className="relative w-full no-print">
+            <DataGridHero {...gridCfg}>
+              <h1>DataGrid Hero</h1>
+              <p>
+                A generative, interactive hero component built with React. Customize
+                the grid animation using the control panel.
               </p>
-            </div>
+              <div className="buttons">
+                <button 
+                  className="button"
+                  onClick={() => triggerAuditPipeline()}
+                >
+                  Get Started
+                </button>
+                <button
+                  className="button-outline"
+                  onClick={() => setGridPanelOpen(true)}
+                >
+                  Controls (H)
+                </button>
+              </div>
 
-            <div className="flex justify-center items-center pt-4">
-              <button
-                onClick={() => triggerAuditPipeline()}
-                className="px-10 py-5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 hover:border-neon-cyan/60 text-neon-cyan font-mono font-bold transition-all shadow-lg shadow-neon-cyan/5 hover:shadow-neon-cyan/10 tracking-widest uppercase text-xs cursor-pointer hover:scale-[1.02]"
-              >
-                ENGAGE DIAGNOSTICS
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 border-t border-zinc-900/60 max-w-2xl mx-auto">
-              <div className="glass-panel p-4 rounded-3xl text-left">
-                <Globe className="w-4 h-4 text-neon-cyan mb-2.5" />
-                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Network Audits</div>
-                <div className="text-[10px] text-zinc-400 font-mono mt-1">ISP & ASN leak validations</div>
-              </div>
-              <div className="glass-panel p-4 rounded-3xl text-left">
-                <Cpu className="w-4 h-4 text-neon-cyan mb-2.5" />
-                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Fingerprinting</div>
-                <div className="text-[10px] text-zinc-400 font-mono mt-1">Canvas & audio synthesizers</div>
-              </div>
-              <div className="glass-panel p-4 rounded-3xl text-left">
-                <MapPin className="w-4 h-4 text-neon-cyan mb-2.5" />
-                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">GPS Coordinate</div>
-                <div className="text-[10px] text-zinc-400 font-mono mt-1">Physical node discrepancies</div>
-              </div>
-              <div className="glass-panel p-4 rounded-3xl text-left">
-                <Lock className="w-4 h-4 text-neon-cyan mb-2.5" />
-                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Secure Contexts</div>
-                <div className="text-[10px] text-zinc-400 font-mono mt-1">Security configurations</div>
-              </div>
-            </div>
+              {gridPanelOpen && (
+                <GridControlPanel
+                  cfg={gridCfg}
+                  setCfg={setGridCfg}
+                  onClose={() => setGridPanelOpen(false)}
+                  onRandomize={randomizeGrid}
+                />
+              )}
+            </DataGridHero>
           </div>
         )}
 

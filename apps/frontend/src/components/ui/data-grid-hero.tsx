@@ -86,7 +86,7 @@ export default function DataGridHero({
           delay = Math.sqrt(dr * dr + dc * dc) * 0.2;
         }
 
-        cell.style.animation = `cell-pulse ${duration}s infinite`;
+        cell.style.animation = `cell-pulse ${duration}s forwards`;
         cell.style.animationDelay = `${delay.toFixed(3)}s`;
       }
 

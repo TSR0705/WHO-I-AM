@@ -64,6 +64,17 @@
   }
 }
 
+@keyframes cell-pulse {
+  from {
+    opacity: var(--opacity-min, 0.05);
+  }
+  to {
+  
+    opacity: var(--opacity-max, 0.6);
+  }
+
+}
+
 body {
   background: var(--bg-color);
   color: var(--fg-color);

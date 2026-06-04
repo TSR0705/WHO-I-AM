@@ -9,38 +9,46 @@ import {
   MapPin, 
   RefreshCw, 
   Activity,
-  Lock,
   Compass,
-  AlertTriangle,
-  CheckCircle,
-  EyeOff,
-  Terminal,
-  ChevronDown,
-  ChevronUp,
-  HelpCircle,
-  X,
-  Settings,
   Printer,
   Share2,
-  BookOpen,
-  Info,
   Clock,
-  History,
   Smartphone,
   Tablet,
-  Laptop
+  Laptop,
+  Terminal,
+  Lock,
+  Info,
+  HelpCircle,
+  EyeOff
 } from "lucide-react";
-import { 
-  getCanvasFingerprint, 
-  getAudioFingerprint, 
-  getWebGLFingerprint, 
-  getWebRTCLocalIPs, 
-  getBrowserCapabilities, 
-  getSecurityConfiguration 
-} from "./utils/fingerprint";
-import eduDataRaw from "./data/education.json";
 
-// Dynamic map wrapper to avoid SSR errors
+// Types
+import { WhoAmIData, HistoryEntry, BrowserCapabilities, SecurityConfig } from "./types";
+
+// Decoupled Components
+import ScannerConsole from "./components/ScannerConsole";
+import PrivacyScoreDial from "./components/PrivacyScoreDial";
+import RiskFindingsCard from "./components/RiskFindingsCard";
+import SimulationConsole from "./components/SimulationConsole";
+import EducationalDrawer from "./components/EducationalDrawer";
+import AuditCategoryCard from "./components/AuditCategoryCard";
+
+// Fingerprinting & capability utilities
+import {
+  getCanvasFingerprint,
+  getAudioFingerprint,
+  getWebGLFingerprint,
+  getBrowserCapabilities,
+  getSecurityConfiguration,
+  getWebRTCLocalIPs
+} from "./utils/fingerprint";
+
+// Educational copy database
+import eduDataRaw from "./data/education.json";
+const eduData = eduDataRaw as Record<string, any>;
+
+// Dynamic Leaflet Map wrapper
 const DynamicMap = dynamic(() => import("./components/Map"), { 
   ssr: false,
   loading: () => (
@@ -50,100 +58,39 @@ const DynamicMap = dynamic(() => import("./components/Map"), {
   )
 });
 
-interface LocationData {
-  city: string;
-  region: string;
-  country: string;
-  latitude: number | null;
-  longitude: number | null;
-}
-
-interface VisitData {
-  total: number;
-  unique: number;
-  yourVisits: number;
-}
-
-interface ProxyData {
-  hasProxyHeaders: boolean;
-  parsedHeaders: Record<string, string>;
-  rawForwardedCount: number;
-}
-
-interface AnonymizationData {
-  isVpnOrHosting: boolean;
-  isTorNode: boolean;
-  provider: string;
-}
-
-interface SimulationData {
-  active: boolean;
-  isSpoofedIp: boolean;
-  isSpoofedUserAgent: boolean;
-  realIp: string;
-  realUserAgent: string;
-}
-
-interface SecurityAuditData {
-  userAgentMismatch: boolean;
-}
-
-interface WhoAmIData {
-  ip: string;
-  network?: {
-    isp: string;
-    asn: string;
-    timezone: string;
-  };
-  browser: string;
-  os: string;
-  device: string;
-  location: LocationData;
-  visits: VisitData;
-  proxy: ProxyData;
-  anonymization: AnonymizationData;
-  simulation: SimulationData;
-  securityAudit: SecurityAuditData;
-}
-
-interface EduItem {
-  name: string;
-  whatChecked: string;
-  whyAccess: string;
-  privacyImpact: string;
-  realWorldExample: string;
-  protection: string;
-  learnMore: string;
-}
-
-const eduData = eduDataRaw as Record<string, EduItem>;
-
-interface HistoryEntry {
-  timestamp: string;
-  score: number;
-  ip: string;
-  grade: string;
-}
-
 export default function Home() {
-  // Navigation / Landing Page states
+  // Navigation & Landing Page States
   const [auditStarted, setAuditStarted] = useState(false);
   const [auditComplete, setAuditComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<"audit" | "education">("audit");
-  
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Diagnostic Logs & Step Indicators
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [scanLogs, setScanLogs] = useState<string[]>([]);
+  const [terminalCollapsed, setTerminalCollapsed] = useState(false);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
+
   // Data States
   const [data, setData] = useState<WhoAmIData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [localIPs, setLocalIPs] = useState<string[]>([]);
   const [canvasHash, setCanvasHash] = useState<string>("detecting...");
   const [audioHash, setAudioHash] = useState<string>("detecting...");
   const [webglInfo, setWebglInfo] = useState<{ hash: string; vendor: string; renderer: string }>({ hash: "detecting...", vendor: "detecting...", renderer: "detecting..." });
-  const [capabilities, setCapabilities] = useState<any>(null);
-  const [securityConfig, setSecurityConfig] = useState<any>(null);
+  const [capabilities, setCapabilities] = useState<BrowserCapabilities | null>(null);
+  const [securityConfig, setSecurityConfig] = useState<SecurityConfig | null>(null);
   const [gpsData, setGpsData] = useState<{ lat: number; lon: number; accuracy: number } | null>(null);
-  const [customCoords, setCustomCoords] = useState<{ lat: number; lon: number; label: string } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [customCoords, setCustomCoords] = useState<{ lat: number; lon: number; label: string } | null>(null);
+
+  // Scroll terminal to bottom
+  useEffect(() => {
+    if (terminalEndRef.current) {
+      terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [scanLogs]);
 
   // Uniqueness ratios
   const [canvasUniqueness, setCanvasUniqueness] = useState<number | null>(null);
@@ -151,41 +98,23 @@ export default function Home() {
   const [totalChecked, setTotalChecked] = useState<number | null>(null);
   const [apiUrlUsed, setApiUrlUsed] = useState<string>("/api");
 
-  // DNS Leak
+  // DNS Leak Test
   const [dnsLeakResolvers, setDnsLeakResolvers] = useState<any[]>([]);
   const [dnsChecking, setDnsChecking] = useState(false);
   const [dnsTested, setDnsTested] = useState(false);
 
-  // Adblocker
+  // Adblock Status
   const [adBlockerActive, setAdBlockerActive] = useState<boolean | null>(null);
 
-  // Beginner vs Advanced Mode Toggle
-  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-
-  // Real-time scan sequencing states
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [scanLogs, setScanLogs] = useState<string[]>([]);
-  const [terminalCollapsed, setTerminalCollapsed] = useState(false);
-
-  // Simulation Form States
+  // Simulator Form States
   const [simulateSpoof, setSimulateSpoof] = useState(false);
   const [spoofIp, setSpoofIp] = useState("");
   const [selectedUaPreset, setSelectedUaPreset] = useState("current");
   const [customUa, setCustomUa] = useState("");
 
-  // History & Educational sliders
+  // History & Educational Drawers
   const [selectedEduKey, setSelectedEduKey] = useState<string | null>(null);
   const [localHistory, setLocalHistory] = useState<HistoryEntry[]>([]);
-
-  const terminalEndRef = useRef<HTMLDivElement>(null);
-
-  const uaPresets: Record<string, string> = {
-    iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1",
-    linux: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-    windows: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
-    tor: "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0"
-  };
 
   const testCategories = [
     { id: 0, name: "Network Identity Audit", desc: "Inspecting Public IP routing and ISP subnets" },
@@ -206,6 +135,13 @@ export default function Home() {
     "Compiling Audit Recommendations..."
   ];
 
+  const uaPresets: Record<string, string> = {
+    iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1",
+    linux: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+    windows: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
+    tor: "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0"
+  };
+
   const apiEndpoints = [
     "/api/whoami",
     "http://localhost:3000/api/whoami",
@@ -218,7 +154,7 @@ export default function Home() {
     setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
 
-  // Load history on start
+  // Load history from LocalStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem("whoami_history");
@@ -292,7 +228,6 @@ export default function Home() {
       }
 
       if (c === 2) {
-        // GPS checks
         logMessage("[LOCATION] Validating coordinate sets...");
       }
 
@@ -312,21 +247,18 @@ export default function Home() {
       }
 
       if (c === 4) {
-        // WebRTC
         getWebRTCLocalIPs((ip) => {
           setLocalIPs(prev => prev.includes(ip) ? prev : [...prev, ip]);
         });
       }
 
       if (c === 6) {
-        // Capabilities
         const caps = getBrowserCapabilities();
         setCapabilities(caps);
         logMessage("[CAPABILITIES] Standard Web storage checks finished.");
       }
 
       if (c === 7) {
-        // Security
         const sec = getSecurityConfiguration();
         setSecurityConfig(sec);
         logMessage("[SECURITY] Secure Context indicator checks completed.");
@@ -368,7 +300,57 @@ export default function Home() {
     logMessage("[COMPLETE] Digital footprint audit successfully parsed. Dashboard loaded.");
   };
 
-  // Save score history on completion
+  useEffect(() => {
+    triggerAuditPipeline();
+
+    // Trigger local WebRTC checks on initialization
+    getWebRTCLocalIPs((ip) => {
+      setLocalIPs(prev => prev.includes(ip) ? prev : [...prev, ip]);
+    });
+
+    const canvas = getCanvasFingerprint();
+    setCanvasHash(canvas);
+
+    getAudioFingerprint().then(hash => setAudioHash(hash));
+  }, []);
+
+  // Submit fingerprints to calculate comparative stats
+  useEffect(() => {
+    if (!data || canvasHash === "detecting..." || audioHash === "detecting...") return;
+
+    async function submitFingerprint() {
+      const baseApiUrl = apiUrlUsed.replace(/\/whoami$/, "");
+      const postUrl = `${baseApiUrl}/fingerprint`;
+
+      try {
+        const res = await fetch(postUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            canvasHash,
+            audioHash,
+            browser: data?.browser,
+            os: data?.os,
+            device: data?.device
+          })
+        });
+        if (res.ok) {
+          const stats = await res.json();
+          setCanvasUniqueness(stats.canvas.sharedPercentage);
+          setAudioUniqueness(stats.audio.sharedPercentage);
+          setTotalChecked(stats.totalChecked);
+        }
+      } catch (e) {
+        console.warn("Fingerprint submission failure:", e);
+      }
+    }
+
+    submitFingerprint();
+  }, [data, canvasHash, audioHash, apiUrlUsed]);
+
+  // Save history on completion
   useEffect(() => {
     if (!auditComplete || !data) return;
 
@@ -383,7 +365,6 @@ export default function Home() {
     };
 
     setLocalHistory(prev => {
-      // Limit to last 5 runs
       const updated = [entry, ...prev.slice(0, 4)];
       try {
         localStorage.setItem("whoami_history", JSON.stringify(updated));
@@ -392,34 +373,16 @@ export default function Home() {
     });
   }, [auditComplete]);
 
-  // Auto-scroll terminal log
-  useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [scanLogs]);
-
   // Privacy Score Calculations
   const getPrivacyScore = () => {
     if (!data) return 100;
     let score = 100;
-    
-    // Test Category 5: WebRTC Leak
     if (localIPs.length > 0) score -= 15;
-    
-    // Test Category 6: DNS leak
     if (dnsTested && dnsLeakResolvers.length > 0) score -= 20;
-    
-    // Test Category 1: Proxy headers
     if (data.proxy.hasProxyHeaders) score -= 10;
-    
-    // Test Category 2: Platform discrepancies
     if (data.securityAudit.userAgentMismatch) score -= 15;
-
-    // Test Category 8: Non-HTTPS site
     if (securityConfig && !securityConfig.isHttps) score -= 15;
     
-    // Anonymizer additions
     if (data.anonymization.isTorNode) {
       score += 10;
     } else if (data.anonymization.isVpnOrHosting) {
@@ -433,7 +396,6 @@ export default function Home() {
 
   const score = getPrivacyScore();
 
-  // Mapping coordinate priorities
   const mapCoords = gpsData ? {
     lat: gpsData.lat,
     lon: gpsData.lon,
@@ -446,6 +408,106 @@ export default function Home() {
 
   const handleOpenEducation = (key: string) => {
     setSelectedEduKey(key);
+  };
+
+  const handleShareReport = () => {
+    if (!data) return;
+    const shareText = `WhoAmI Audit Report\nIPv4 Address: ${data.ip}\nPrivacy Score: ${score}/100\nAnonymization: ${data.anonymization.provider}\nRun your scan here: ${window.location.origin}`;
+    navigator.clipboard.writeText(shareText).then(() => {
+      alert("Privacy Audit Report copied to clipboard!");
+    });
+  };
+
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  const handleApplySimulation = () => {
+    let finalUa = "";
+    if (selectedUaPreset === "custom") {
+      finalUa = customUa;
+    } else if (selectedUaPreset !== "current") {
+      finalUa = uaPresets[selectedUaPreset] || "";
+    }
+    triggerAuditPipeline(spoofIp, finalUa);
+  };
+
+  const handleResetSimulation = () => {
+    setSpoofIp("");
+    setSelectedUaPreset("current");
+    setCustomUa("");
+    setSimulateSpoof(false);
+    triggerAuditPipeline();
+  };
+
+  const getRiskBreakdown = () => {
+    const risks: { type: "high" | "medium" | "low", title: string, desc: string }[] = [];
+
+    if (localIPs.length > 0) {
+      risks.push({
+        type: "high",
+        title: "WebRTC Local IP Exposure",
+        desc: "Your local network routing IP (e.g. 192.168.x.x) is exposed, bypassing VPN wrappers."
+      });
+    }
+    
+    if (dnsTested && dnsLeakResolvers.length > 0) {
+      risks.push({
+        type: "high",
+        title: "DNS Tunnel Leak Detected",
+        desc: "Your system's DNS lookup requests are bypassing your secure VPN tunnel, exposing sites to your ISP."
+      });
+    }
+
+    if (securityConfig && !securityConfig.isHttps) {
+      risks.push({
+        type: "high",
+        title: "Unencrypted Connection (Insecure HTTP)",
+        desc: "You are accessing this site via insecure HTTP. Local eavesdroppers can read or modify your data."
+      });
+    }
+
+    if (data && data.securityAudit.userAgentMismatch) {
+      risks.push({
+        type: "medium",
+        title: "Platform Fingerprint Discrepancy",
+        desc: "Your HTTP user-agent header reports one OS while your device browser APIs suggest another. Often blocked by anti-bot firewalls."
+      });
+    }
+
+    if (data && data.proxy.hasProxyHeaders) {
+      risks.push({
+        type: "medium",
+        title: "Proxy Routing Headers Detected",
+        desc: "Your connection leaks forwarding headers indicating you route traffic via intermediate proxies."
+      });
+    }
+
+    if (canvasHash !== "blocked" && canvasHash !== "not-supported") {
+      risks.push({
+        type: "medium",
+        title: "HTML5 Canvas Tracking ID Active",
+        desc: "Your graphics engine generates a reliable tracking fingerprint that correlates sessions without cookies."
+      });
+    }
+
+    if (capabilities && capabilities.localStorageSupported) {
+      risks.push({
+        type: "low",
+        title: "Active LocalStorage Capability",
+        desc: "Allows websites to save up to 5MB of persistent files that track profiles after clearing cookies."
+      });
+    }
+
+    if (data && !data.anonymization.isVpnOrHosting) {
+      risks.push({
+        type: "low",
+        title: "Residential Route Exposure",
+        desc: "Your connection resolves to a residential range, directly identifying your physical region/ISP."
+      });
+    }
+
+    return risks;
   };
 
   const handleBrowserLocate = () => {
@@ -474,125 +536,12 @@ export default function Home() {
     );
   };
 
-  const handleShareReport = () => {
-    if (!data) return;
-    const shareText = `WhoAmI Audit Report\nIPv4 Address: ${data.ip}\nPrivacy Score: ${score}/100\nAnonymization: ${data.anonymization.provider}\nRun your scan here: ${window.location.origin}`;
-    navigator.clipboard.writeText(shareText).then(() => {
-      alert("Privacy Audit Report copied to clipboard!");
-    });
-  };
-
-  const handleExportPDF = () => {
-    window.print();
-  };
-
-  const handleApplySimulation = () => {
-    let finalUa = "";
-    if (selectedUaPreset === "custom") {
-      finalUa = customUa;
-    } else if (selectedUaPreset !== "current") {
-      finalUa = uaPresets[selectedUaPreset] || "";
-    }
-    logMessage(`Simulation Monitor: Triggering audit simulation (IP: ${spoofIp || 'default'}, UA: ${selectedUaPreset})`);
-    triggerAuditPipeline(spoofIp, finalUa);
-  };
-
-  const handleResetSimulation = () => {
-    setSpoofIp("");
-    setSelectedUaPreset("current");
-    setCustomUa("");
-    setSimulateSpoof(false);
-    triggerAuditPipeline();
-  };
-
-  // Finding risk distributions
-  const getRiskBreakdown = () => {
-    const risks: { type: "high" | "medium" | "low", title: string, desc: string }[] = [];
-
-    // Category 5
-    if (localIPs.length > 0) {
-      risks.push({
-        type: "high",
-        title: "WebRTC Local IP Exposure",
-        desc: "Your local network routing IP (e.g. 192.168.x.x) is exposed, bypassing VPN wrappers."
-      });
-    }
-    
-    // Category 6
-    if (dnsTested && dnsLeakResolvers.length > 0) {
-      risks.push({
-        type: "high",
-        title: "DNS Tunnel Leak Detected",
-        desc: "Your system's DNS lookup requests are bypassing your secure VPN tunnel, exposing sites to your ISP."
-      });
-    }
-
-    // Category 8
-    if (securityConfig && !securityConfig.isHttps) {
-      risks.push({
-        type: "high",
-        title: "Unencrypted Connection (Insecure HTTP)",
-        desc: "You are accessing this site via insecure HTTP. Local eavesdroppers can read or modify your data."
-      });
-    }
-
-    // Category 2
-    if (data && data.securityAudit.userAgentMismatch) {
-      risks.push({
-        type: "medium",
-        title: "Platform Fingerprint Discrepancy",
-        desc: "Your HTTP user-agent header reports one OS while your device browser APIs suggest another. Often blocked by anti-bot firewalls."
-      });
-    }
-
-    // Category 1
-    if (data && data.proxy.hasProxyHeaders) {
-      risks.push({
-        type: "medium",
-        title: "Proxy Routing Headers Detected",
-        desc: "Your connection leaks forwarding headers indicating you route traffic via intermediate proxies."
-      });
-    }
-
-    // Category 4
-    if (canvasHash !== "blocked" && canvasHash !== "not-supported") {
-      risks.push({
-        type: "medium",
-        title: "HTML5 Canvas Tracking ID Active",
-        desc: "Your graphics engine generates a reliable tracking fingerprint that correlates sessions without cookies."
-      });
-    }
-
-    // Category 7
-    if (capabilities && capabilities.localStorageSupported) {
-      risks.push({
-        type: "low",
-        title: "Active LocalStorage Capability",
-        desc: "Allows websites to save up to 5MB of persistent files that track profiles after clearing cookies."
-      });
-    }
-
-    // Category 1
-    if (data && !data.anonymization.isVpnOrHosting) {
-      risks.push({
-        type: "low",
-        title: "Residential Route Exposure",
-        desc: "Your connection resolves to a residential range, directly identifying your physical region/ISP."
-      });
-    }
-
-    return risks;
-  };
-
   const riskFindings = getRiskBreakdown();
-  const highRisks = riskFindings.filter(r => r.type === "high");
-  const mediumRisks = riskFindings.filter(r => r.type === "medium");
-  const lowRisks = riskFindings.filter(r => r.type === "low");
 
   return (
     <div className="flex flex-col min-h-screen bg-[#050608] text-zinc-100 font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
       
-      {/* CSS Print Styles Sheet */}
+      {/* Global CSS Print Style Sheets */}
       <style jsx global>{`
         @media print {
           body {
@@ -681,6 +630,13 @@ export default function Home() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20">
         
+        {error && (
+          <div className="bg-red-950/20 border border-red-900/50 p-4 rounded-2xl text-red-400 font-mono text-xs mb-6 flex items-center justify-between no-print animate-fade-in">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="hover:text-white text-lg">&times;</button>
+          </div>
+        )}
+
         {/* Landing screen if audit not started */}
         {!auditStarted && (
           <div className="max-w-3xl mx-auto text-center py-20 space-y-8 no-print">
@@ -807,26 +763,14 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-card">
               
               {/* Radial Dial Score */}
-              <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden print-card">
-                <div className="absolute top-0 right-0 p-4 text-zinc-900/40 pointer-events-none">
-                  <Lock className="w-28 h-28" />
-                </div>
-                
-                <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold mb-4">Overall Privacy Rating</span>
-                <div className="relative w-32 h-32 rounded-full border-8 border-zinc-900 border-t-cyan-500 flex flex-col items-center justify-center shadow-lg">
-                  <span className="text-5xl font-extrabold font-mono text-white">
-                    {score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 60 ? 'C' : score >= 45 ? 'D' : 'F'}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 font-mono font-bold uppercase mt-1">{score}/100</span>
-                </div>
-
-                <div className="mt-6 font-mono space-y-1">
-                  <div className="text-sm font-bold text-zinc-300">
-                    {score >= 80 ? "Solid Protection" : score >= 55 ? "Moderate Exposure" : "Highly Vulnerable Profile"}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 uppercase">Audit Completed Successfully</div>
-                </div>
-              </div>
+              <PrivacyScoreDial
+                score={score}
+                localIPsExposed={localIPs.length > 0}
+                dnsLeaking={dnsTested && dnsLeakResolvers.length > 0}
+                dnsTested={dnsTested}
+                adblockerActive={adBlockerActive}
+                onExplainClick={handleOpenEducation}
+              />
 
               {/* Severity Counts */}
               <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 flex flex-col justify-between print-card lg:col-span-2">
@@ -835,21 +779,21 @@ export default function Home() {
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     <div className="bg-red-950/10 border border-red-900/20 p-4 rounded-2xl flex flex-col justify-between h-24">
                       <span className="text-[10px] text-red-400 font-mono font-bold uppercase">High Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-red-500">{highRisks.length}</div>
+                      <div className="text-3xl font-extrabold font-mono text-red-500">{riskFindings.filter(r => r.type === "high").length}</div>
                     </div>
                     <div className="bg-amber-950/10 border border-amber-900/20 p-4 rounded-2xl flex flex-col justify-between h-24">
                       <span className="text-[10px] text-amber-400 font-mono font-bold uppercase">Medium Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-amber-500">{mediumRisks.length}</div>
+                      <div className="text-3xl font-extrabold font-mono text-amber-500">{riskFindings.filter(r => r.type === "medium").length}</div>
                     </div>
                     <div className="bg-zinc-900/40 border border-zinc-900 p-4 rounded-2xl flex flex-col justify-between h-24">
                       <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase">Low Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-cyan-400">{lowRisks.length}</div>
+                      <div className="text-3xl font-extrabold font-mono text-cyan-400">{riskFindings.filter(r => r.type === "low").length}</div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="text-xs font-mono text-zinc-500 mt-4 border-t border-zinc-900 pt-4 flex justify-between items-center">
-                  <span>Mitigation Grade: {highRisks.length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED"}</span>
+                  <span>Mitigation Grade: {riskFindings.filter(r => r.type === "high").length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED"}</span>
                   <span className="text-cyan-400 font-bold hover:underline cursor-pointer" onClick={() => setActiveTab("education")}>
                     Learn mitigation mechanics →
                   </span>
@@ -859,49 +803,7 @@ export default function Home() {
             </div>
 
             {/* Findings List (Strengths/Weaknesses Summary Report) */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 print-card">
-              <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest border-b border-zinc-900 pb-3 mb-4">
-                Diagnostic Report Findings
-              </h3>
-              
-              <div className="space-y-4">
-                {highRisks.map((risk, i) => (
-                  <div key={i} className="flex gap-4 items-start bg-red-950/10 border border-red-900/20 p-4 rounded-2xl print-card">
-                    <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wide">{risk.title}</h4>
-                      <p className="text-xs text-zinc-400 mt-1 font-mono">{risk.desc}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {mediumRisks.map((risk, i) => (
-                  <div key={i} className="flex gap-4 items-start bg-amber-950/10 border border-amber-900/20 p-4 rounded-2xl print-card">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wide">{risk.title}</h4>
-                      <p className="text-xs text-zinc-400 mt-1 font-mono">{risk.desc}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {lowRisks.map((risk, i) => (
-                  <div key={i} className="flex gap-4 items-start bg-zinc-900/30 border border-zinc-900 p-4 rounded-2xl print-card">
-                    <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wide">{risk.title}</h4>
-                      <p className="text-xs text-zinc-400 mt-1 font-mono">{risk.desc}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {riskFindings.length === 0 && (
-                  <div className="text-center py-6 text-xs font-mono text-zinc-500">
-                    No critical security findings reported.
-                  </div>
-                )}
-              </div>
-            </div>
+            <RiskFindingsCard findings={riskFindings} />
 
             {/* Test Categories Audit Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-grid">
@@ -909,19 +811,13 @@ export default function Home() {
               <div className="lg:col-span-2 space-y-8 print-grid">
                 
                 {/* Category 1: Network Identity Audit */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Network Identity Audit</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("ip")}
-                    />
-                  </div>
-                  
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <AuditCategoryCard
+                  title="Network Identity Audit"
+                  icon={<Globe className="w-4 h-4 text-cyan-400" />}
+                  eduKey="ip"
+                  onExplainClick={handleOpenEducation}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Public IP Address</span>
@@ -976,22 +872,16 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
                 {/* Category 2: Device Profile Audit */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Device Profile Audit</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("browser")}
-                    />
-                  </div>
-
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <AuditCategoryCard
+                  title="Device Profile Audit"
+                  icon={<Cpu className="w-4 h-4 text-cyan-400" />}
+                  eduKey="browser"
+                  onExplainClick={handleOpenEducation}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Browser Profile</span>
@@ -1042,23 +932,16 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
                 {/* Category 4: Browser Fingerprint Audit */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">
-                        {isAdvancedMode ? "Browser Fingerprinting Audit" : "Browser Identity Profile"}
-                      </h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("canvas")}
-                    />
-                  </div>
-
+                <AuditCategoryCard
+                  title={isAdvancedMode ? "Browser Fingerprinting Audit" : "Browser Identity Profile"}
+                  icon={<Cpu className="w-4 h-4 text-cyan-400" />}
+                  eduKey="canvas"
+                  onExplainClick={handleOpenEducation}
+                  paddingStyle="p-0"
+                >
                   <div className="divide-y divide-zinc-900 font-mono text-xs">
                     <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
@@ -1119,23 +1002,17 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
-                {/* Category 5 & 6: WebRTC & DNS check leaks */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">WebRTC & DNS Privacy</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("webrtc")}
-                    />
-                  </div>
-
+                {/* Category 5 & 6: WebRTC & DNS leaks */}
+                <AuditCategoryCard
+                  title="WebRTC & DNS Privacy"
+                  icon={<Shield className="w-4 h-4 text-cyan-400" />}
+                  eduKey="webrtc"
+                  onExplainClick={handleOpenEducation}
+                  paddingStyle="p-0"
+                >
                   <div className="divide-y divide-zinc-900 font-mono text-xs">
-                    {/* WebRTC Candidate details */}
                     <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h4 className="font-bold text-zinc-200 uppercase tracking-wide">
@@ -1161,7 +1038,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* DNS resolving endpoints */}
                     <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h4 className="font-bold text-zinc-200 uppercase tracking-wide">
@@ -1193,22 +1069,16 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
-                {/* Category 7: Browser Capabilities Audit */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Browser Capabilities Audit</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("capabilities")}
-                    />
-                  </div>
-
-                  <div className="p-6 grid grid-cols-2 gap-4 font-mono text-xs">
+                {/* Category 7: Browser Capabilities */}
+                <AuditCategoryCard
+                  title="Browser Capabilities Audit"
+                  icon={<Terminal className="w-4 h-4 text-cyan-400" />}
+                  eduKey="capabilities"
+                  onExplainClick={handleOpenEducation}
+                >
+                  <div className="grid grid-cols-2 gap-4 font-mono text-xs">
                     <div className="space-y-3">
                       <div className="flex justify-between border-b border-zinc-900 pb-1.5">
                         <span className="text-zinc-500">Cookies Enabled:</span>
@@ -1249,22 +1119,16 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
-                {/* Category 8: Security Configuration Audit */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden print-card">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Security Configuration Audit</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("security")}
-                    />
-                  </div>
-
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-xs">
+                {/* Category 8: Security Configurations */}
+                <AuditCategoryCard
+                  title="Security Configuration Audit"
+                  icon={<Lock className="w-4 h-4 text-cyan-400" />}
+                  eduKey="security"
+                  onExplainClick={handleOpenEducation}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-xs">
                     <div className="space-y-3">
                       <div className="flex justify-between border-b border-zinc-900 pb-1.5">
                         <span className="text-zinc-500">HTTPS Encryption:</span>
@@ -1295,11 +1159,11 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </AuditCategoryCard>
 
               </div>
 
-              {/* Column 3: Geocoding Leaflet Map & Interactive GPS Controls */}
+              {/* Column 3: Geocoding Map & Simulation Controls */}
               <div className="space-y-8 print-card">
                 
                 {/* Geocoding Map */}
@@ -1366,81 +1230,19 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Audit Simulation Configuration (Footer) */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden shadow-xl no-print">
-                  <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Settings className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">
-                        FOOTPRINT SIMULATOR
-                      </h3>
-                    </div>
-                    <button 
-                      onClick={() => setSimulateSpoof(!simulateSpoof)}
-                      className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 animate-pulse"
-                    >
-                      {simulateSpoof ? "HIDE" : "SIMULATE SPOOF"}
-                    </button>
-                  </div>
-
-                  {simulateSpoof && (
-                    <div className="p-5 bg-zinc-950/80 space-y-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">Simulate IP Address</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 8.8.8.8"
-                          value={spoofIp}
-                          onChange={(e) => setSpoofIp(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">Simulate User-Agent Profile</label>
-                        <select
-                          value={selectedUaPreset}
-                          onChange={(e) => setSelectedUaPreset(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
-                        >
-                          <option value="current">Current Browser (No spoofing)</option>
-                          <option value="iphone">Safari on Apple iPhone (iOS)</option>
-                          <option value="linux">Chrome on Ubuntu Linux</option>
-                          <option value="windows">Firefox on Windows 10/11</option>
-                          <option value="tor">Tor Browser (Header Simulator)</option>
-                          <option value="custom">Custom string...</option>
-                        </select>
-                      </div>
-
-                      {selectedUaPreset === "custom" && (
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Paste custom User-Agent string..."
-                            value={customUa}
-                            onChange={(e) => setCustomUa(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="flex gap-3 pt-2">
-                        <button
-                          onClick={handleApplySimulation}
-                          className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 text-xs font-mono font-bold transition-all shadow-md"
-                        >
-                          APPLY SIMULATOR
-                        </button>
-                        <button
-                          onClick={handleResetSimulation}
-                          className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 text-xs font-mono font-bold transition-all"
-                        >
-                          RESET
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* Simulation Form Panel */}
+                <SimulationConsole
+                  spoofIp={spoofIp}
+                  setSpoofIp={setSpoofIp}
+                  selectedUaPreset={selectedUaPreset}
+                  setSelectedUaPreset={setSelectedUaPreset}
+                  customUa={customUa}
+                  setCustomUa={setCustomUa}
+                  simulateSpoof={simulateSpoof}
+                  setSimulateSpoof={setSimulateSpoof}
+                  onApply={handleApplySimulation}
+                  onReset={handleResetSimulation}
+                />
 
                 {/* Local History trends */}
                 <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 shadow-sm space-y-4 no-print">
@@ -1477,87 +1279,24 @@ export default function Home() {
           </div>
         )}
 
+        {/* Diagnostic logs slider terminal when audit complete */}
+        {auditStarted && auditComplete && (
+          <ScannerConsole
+            logs={scanLogs}
+            progress={100}
+            isScanning={false}
+            collapsed={terminalCollapsed}
+            onToggleCollapse={() => setTerminalCollapsed(!terminalCollapsed)}
+          />
+        )}
+
       </main>
 
       {/* Slide-out Educational Drawer overlay */}
-      {selectedEduKey && eduData[selectedEduKey] && (
-        <div className="fixed inset-0 z-50 overflow-hidden font-mono no-print">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedEduKey(null)} />
-          
-          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-zinc-950 border-l border-zinc-900 p-6 flex flex-col justify-between shadow-2xl relative">
-              
-              <div className="space-y-5 overflow-y-auto pr-1">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
-                    {eduData[selectedEduKey].name}
-                  </h3>
-                  <button 
-                    onClick={() => setSelectedEduKey(null)}
-                    className="text-zinc-500 hover:text-zinc-300"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4 text-xs leading-relaxed text-zinc-300">
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">What we checked</h4>
-                    <p className="p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-900/80">
-                      {eduData[selectedEduKey].whatChecked}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Why websites can access this</h4>
-                    <p className="p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-900/80">
-                      {eduData[selectedEduKey].whyAccess}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Privacy Impact</h4>
-                    <p className="p-3.5 bg-red-950/10 rounded-xl border border-red-900/20 text-zinc-400">
-                      {eduData[selectedEduKey].privacyImpact}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Real-world Example</h4>
-                    <p className="p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-900/80 italic text-zinc-400">
-                      &ldquo;{eduData[selectedEduKey].realWorldExample}&rdquo;
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">How to protect yourself</h4>
-                    <p className="p-3.5 bg-cyan-950/10 rounded-xl border border-cyan-900/20 text-zinc-400">
-                      {eduData[selectedEduKey].protection}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Learn More</h4>
-                    <p className="p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-900/80 text-zinc-500">
-                      {eduData[selectedEduKey].learnMore}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-zinc-900 mt-6 flex justify-end">
-                <button
-                  onClick={() => setSelectedEduKey(null)}
-                  className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-850 rounded-xl text-xs font-bold font-mono transition-all"
-                >
-                  CLOSE DIALOG
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
+      <EducationalDrawer 
+        eduKey={selectedEduKey} 
+        onClose={() => setSelectedEduKey(null)} 
+      />
 
       {/* Footer */}
       <footer className="border-t border-zinc-900/80 bg-zinc-950 py-6 text-center text-[10px] text-zinc-600 font-mono mt-auto relative z-30 tracking-widest uppercase no-print">

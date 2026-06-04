@@ -1,98 +1,28 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-import dns from 'dns';
+import { ENV } from './config/env';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import requestIp from 'request-ip';
-import UAParser from 'ua-parser-js';
-// @ts-ignore
-import geoip from 'geoip-lite';
-import fs from 'fs';
-import path from 'path';
-import Redis from 'ioredis';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import pino from 'pino';
 import * as client from 'prom-client';
-import { Pool } from 'pg';
-import { DNSServer } from './dns-server';
-import { vpnDetectorInstance } from './services/vpn-detector';
 
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+// Services
+import { initDatabase } from './services/db';
+import { visitsService } from './services/visits';
+import { startDnsServer, stopDnsServer } from './services/dns';
 
-// Local cache for DNS leak tests (fallback if Redis is down)
-const dnsCache = new Map<string, string[]>();
-let dnsServerInstance: DNSServer | null = null;
+// Routers
+import whoamiRouter from './routes/whoami';
+import visitsRouter from './routes/visits';
+import fingerprintRouter from './routes/fingerprint';
+import dnsLeakRouter from './routes/dns-leak';
 
-// Initialize Postgres Connection Pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-// Run table schema setup on start
-async function initDatabase() {
-  if (!process.env.DATABASE_URL) {
-    logger.info('No DATABASE_URL provided, skipping Postgres initialization');
-    return;
-  }
-  
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS fingerprints (
-        id SERIAL PRIMARY KEY,
-        canvas_hash VARCHAR(64) NOT NULL,
-        audio_hash VARCHAR(64) NOT NULL,
-        browser VARCHAR(255) NOT NULL,
-        os VARCHAR(255) NOT NULL,
-        device VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_canvas_hash ON fingerprints(canvas_hash);
-      CREATE INDEX IF NOT EXISTS idx_audio_hash ON fingerprints(audio_hash);
-    `);
-    logger.info('Postgres database schema initialized');
-  } catch (err) {
-    logger.error({ err }, 'Failed to initialize Postgres database');
-  }
-}
-
-function getNetworkDetails(ipAddress: string): Promise<{ isp: string; asn: string }> {
-  return new Promise((resolve) => {
-    if (ipAddress === '127.0.0.1' || ipAddress === '::1') {
-      return resolve({ isp: 'Local Loopback Connection', asn: 'AS0' });
-    }
-    
-    dns.reverse(ipAddress, (err, hostnames) => {
-      if (err || !hostnames || hostnames.length === 0) {
-        return resolve({ isp: 'Unknown ISP / Network', asn: 'Unknown' });
-      }
-      
-      const host = hostnames[0];
-      let isp = host;
-      let asn = 'Unknown';
-      
-      if (host.includes('comcast')) { isp = 'Comcast Cable'; asn = 'AS7922'; }
-      else if (host.includes('verizon')) { isp = 'Verizon Communications'; asn = 'AS701'; }
-      else if (host.includes('att') || host.includes('sbcglobal')) { isp = 'AT&T Internet'; asn = 'AS7018'; }
-      else if (host.includes('charter') || host.includes('rr.com')) { isp = 'Charter Communications'; asn = 'AS20115'; }
-      else if (host.includes('centurylink')) { isp = 'CenturyLink'; asn = 'AS209'; }
-      else if (host.includes('amazonaws')) { isp = 'Amazon Web Services'; asn = 'AS16509'; }
-      else if (host.includes('google')) { isp = 'Google LLC'; asn = 'AS15169'; }
-      else if (host.includes('cloud.google')) { isp = 'Google Cloud Platform'; asn = 'AS36492'; }
-      else if (host.includes('digitalocean')) { isp = 'DigitalOcean LLC'; asn = 'AS14061'; }
-      
-      resolve({ isp, asn });
-    });
-  });
-}
-
+const logger = pino({ level: ENV.LOG_LEVEL });
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
 
-// Respect trust proxy settings
-const trustProxyEnv = process.env.TRUST_PROXY;
+// Trust Proxy Configuration
+const trustProxyEnv = ENV.TRUST_PROXY;
 let trustProxy: string | number | boolean;
 if (typeof trustProxyEnv !== 'undefined') {
   if (/^\d+$/.test(trustProxyEnv)) {
@@ -101,11 +31,11 @@ if (typeof trustProxyEnv !== 'undefined') {
     trustProxy = trustProxyEnv === 'true';
   }
 } else {
-  trustProxy = (process.env.NODE_ENV === 'production') ? 1 : false;
+  trustProxy = (ENV.NODE_ENV === 'production') ? 1 : false;
 }
 app.set('trust proxy', trustProxy);
 
-// Content Security Policy
+// Security Headers (Helmet Content Security Policy)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -122,15 +52,14 @@ app.use(helmet({
 }));
 
 app.use(express.json());
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
+app.use(cors({ origin: ENV.ALLOWED_ORIGIN }));
 app.use(requestIp.mw());
 
-// Rate Limiter
+// Rate Limiting middleware for API endpoints
 app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 
-// Telemetry
-const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics();
+// Prometheus Telemetry Metrics
+client.collectDefaultMetrics();
 
 const httpRequestsTotal = new client.Counter({
   name: 'whoami_http_requests_total',
@@ -145,6 +74,7 @@ const httpRequestDurationSeconds = new client.Histogram({
   buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5]
 });
 
+// Telemetry Request Interceptor
 app.use((req: Request, res: Response, next: NextFunction) => {
   const end = httpRequestDurationSeconds.startTimer({ method: req.method, path: req.path });
   res.on('finish', () => {
@@ -155,387 +85,20 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Cache map
-const geoCache = new Map<string, any>();
-const GEO_TTL_MS = Number(process.env.GEO_CACHE_TTL_MS || 5 * 60 * 1000);
+// Register Decoupled API Routers
+app.use('/api', whoamiRouter);
+app.use('/api', visitsRouter);
+app.use('/api', fingerprintRouter);
+app.use('/api', dnsLeakRouter);
 
-// Simple fallback storage
-const VISITS_FILE = path.join(__dirname, 'visits.json');
-const fsPromises = fs.promises;
-
-async function readVisits(): Promise<{ total: number; byIp: Record<string, number> }> {
-  try {
-    const raw = await fsPromises.readFile(VISITS_FILE, 'utf8');
-    return JSON.parse(raw);
-  } catch (e) {
-    return { total: 0, byIp: {} };
-  }
-}
-
-async function writeVisits(data: { total: number; byIp: Record<string, number> }) {
-  try {
-    await fsPromises.writeFile(VISITS_FILE, JSON.stringify(data, null, 2));
-  } catch (e) {
-    logger.error({ err: e }, 'Failed to write visits file');
-  }
-}
-
-// Ensure visits file exists
-if (!fs.existsSync(VISITS_FILE)) {
-  fs.writeFileSync(VISITS_FILE, JSON.stringify({ total: 0, byIp: {} }, null, 2));
-}
-
-// Redis setup
-let redis: Redis | null = null;
-let redisReady = false;
-if (process.env.REDIS_URL) {
-  redis = new Redis(process.env.REDIS_URL, {
-    retryStrategy: (times) => Math.min(50 * times, 2000),
-    maxRetriesPerRequest: null,
-    enableReadyCheck: true,
-  });
-  redis.on('ready', () => { redisReady = true; logger.info('Redis ready'); });
-  redis.on('error', (err) => { redisReady = false; logger.warn({ err }, 'Redis error'); });
-  redis.on('end', () => { redisReady = false; logger.info('Redis connection closed'); });
-}
-
-async function incrementVisitsRedis(ip: string) {
-  if (!redis) throw new Error('Redis not initialized');
-  await redis.incr('visits:total');
-  await redis.hincrby('visits:byIp', ip, 1);
-  const [total, unique, yourVisits] = await Promise.all([
-    redis.get('visits:total'),
-    redis.hlen('visits:byIp'),
-    redis.hget('visits:byIp', ip)
-  ]);
-  return { total: Number(total || 0), unique: Number(unique || 0), yourVisits: Number(yourVisits || 0) };
-}
-
-async function incrementVisitsFile(ip: string) {
-  const visits = await readVisits();
-  visits.total = (visits.total || 0) + 1;
-  visits.byIp = visits.byIp || {};
-  visits.byIp[ip] = (visits.byIp[ip] || 0) + 1;
-  await writeVisits(visits);
-  return { total: visits.total, unique: Object.keys(visits.byIp).length, yourVisits: visits.byIp[ip] || 0 };
-}
-
-async function incrementVisits(ip: string) {
-  if (redis && redisReady) {
-    try {
-      return await incrementVisitsRedis(ip);
-    } catch (e) {
-      logger.warn({ err: e }, 'Redis increment failed, falling back to file');
-      return incrementVisitsFile(ip);
-    }
-  }
-  return incrementVisitsFile(ip);
-}
-
-// Routes
-app.get('/api/whoami', async (req: Request, res: Response) => {
-  const ipRaw = req.ip || (req as any).clientIp || '';
-  let ip = ipRaw.replace(/^::ffff:/, '').replace(/^\[::1\]$|^::1$/, '127.0.0.1');
-  if (ip === '::1' || ip === '0:0:0:0:0:0:0:1') ip = '127.0.0.1';
-
-  const ua = req.headers['user-agent'] || '';
-
-  // Simulation/Spoof checks via query params
-  const spoofIp = req.query.spoofIp as string;
-  const spoofUserAgent = req.query.spoofUserAgent as string;
-  const clientOs = req.query.clientOs as string;
-
-  let ipToAudit = ip;
-  if (spoofIp && spoofIp.trim() !== '') {
-    ipToAudit = spoofIp.trim();
-  }
-
-  let uaToAudit = ua;
-  if (spoofUserAgent && spoofUserAgent.trim() !== '') {
-    uaToAudit = spoofUserAgent.trim();
-  }
-
-  const parsed = new UAParser(uaToAudit).getResult();
-  const browser = parsed.browser && parsed.browser.name ? `${parsed.browser.name} ${parsed.browser.version || ''}`.trim() : 'Unknown';
-  const os = parsed.os && parsed.os.name ? `${parsed.os.name} ${parsed.os.version || ''}`.trim() : 'Unknown';
-  const device = parsed.device && parsed.device.type ? parsed.device.type : 'desktop';
-
-  // 1. Proxy Headers Parser
-  const viaHeader = req.headers['via'] || '';
-  const forwardedHeader = req.headers['forwarded'] || '';
-  const xForwardedForHeader = req.headers['x-forwarded-for'] || '';
-  const clientIpHeader = req.headers['client-ip'] || req.headers['x-client-ip'] || '';
-  const xRealIpHeader = req.headers['x-real-ip'] || '';
-
-  const parsedHeaders: Record<string, string> = {};
-  if (viaHeader) parsedHeaders['via'] = String(viaHeader);
-  if (forwardedHeader) parsedHeaders['forwarded'] = String(forwardedHeader);
-  if (xForwardedForHeader) parsedHeaders['x-forwarded-for'] = String(xForwardedForHeader);
-  if (clientIpHeader) parsedHeaders['client-ip'] = String(clientIpHeader);
-  if (xRealIpHeader) parsedHeaders['x-real-ip'] = String(xRealIpHeader);
-
-  const hasProxyHeaders = Object.keys(parsedHeaders).length > 0;
-  const xffIps = typeof xForwardedForHeader === 'string' ? xForwardedForHeader.split(',').map(s => s.trim()) : [];
-  const rawForwardedCount = xffIps.length;
-
-  // 2. Anonymizer Matches (VPN, Hosting Providers, Tor Nodes)
-  const isTorNode = vpnDetectorInstance.isTorNode(ipToAudit);
-  const hostingProvider = vpnDetectorInstance.getHostingProvider(ipToAudit);
-  const isVpnOrHosting = hostingProvider !== null;
-
-  // 3. User-Agent / Client Feature Mismatches (Suspicious Client Flags)
-  let userAgentMismatch = false;
-  if (clientOs && os !== 'Unknown') {
-    // Basic normalized check (e.g. comparing macos/mac with win/windows)
-    const normalizedOs = os.toLowerCase();
-    const normalizedClient = clientOs.toLowerCase();
-    
-    const isClientMac = normalizedClient.includes('mac') || normalizedClient.includes('ios') || normalizedClient.includes('apple');
-    const isClientWindows = normalizedClient.includes('win');
-    const isClientLinux = normalizedClient.includes('linux');
-    const isClientAndroid = normalizedClient.includes('android');
-
-    const isServerMac = normalizedOs.includes('mac') || normalizedOs.includes('ios');
-    const isServerWindows = normalizedOs.includes('win');
-    const isServerLinux = normalizedOs.includes('linux');
-    const isServerAndroid = normalizedOs.includes('android');
-
-    if (
-      (isClientMac && !isServerMac) ||
-      (isClientWindows && !isServerWindows) ||
-      (isClientLinux && !isServerLinux) ||
-      (isClientAndroid && !isServerAndroid)
-    ) {
-      userAgentMismatch = true;
-    }
-  }
-
-  let location = { city: '', region: '', country: '', latitude: null as number | null, longitude: null as number | null };
-
-  async function fetchWithTimeout(url: string, opts: any = {}, ms = 3000) {
-    const ac = new AbortController();
-    const id = setTimeout(() => ac.abort(), ms);
-    try {
-      const r = await fetch(url, { ...opts, signal: ac.signal });
-      clearTimeout(id);
-      return r;
-    } catch (err) {
-      clearTimeout(id);
-      throw err;
-    }
-  }
-
-  async function getExternalGeo(ipAddress: string) {
-    if (!process.env.GEO_PROVIDER || !process.env.GEO_API_KEY) return null;
-    const key = `${process.env.GEO_PROVIDER}:${ipAddress}`;
-    const cached = geoCache.get(key);
-    if (cached && (Date.now() - cached.ts) < GEO_TTL_MS) return cached.value;
-
-    try {
-      if (process.env.GEO_PROVIDER === 'ipapi') {
-        const url = `https://ipapi.co/${ipAddress}/json/?key=${process.env.GEO_API_KEY}`;
-        const resp = await fetchWithTimeout(url, {}, 3000);
-        if (!resp.ok) throw new Error(`geo provider status ${resp.status}`);
-        const j = await resp.json() as any;
-        const val = {
-          city: j.city || '',
-          region: j.region || j.region_code || '',
-          country: j.country || j.country_name || '',
-          latitude: j.latitude || j.lat || null,
-          longitude: j.longitude || j.lon || null
-        };
-        geoCache.set(key, { ts: Date.now(), value: val });
-        return val;
-      }
-    } catch (e) {
-      logger.warn({ err: e }, 'External geo lookup failed');
-      return null;
-    }
-    return null;
-  }
-
-  try {
-    const privateIpRegex = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])|::1$|::ffff:127\.)/;
-    if (!privateIpRegex.test(ipToAudit) && process.env.GEO_PROVIDER && process.env.GEO_API_KEY) {
-      const ext = await getExternalGeo(ipToAudit);
-      if (ext) {
-        location = { ...location, ...ext };
-      }
-    }
-  } catch (e) {
-    logger.warn({ err: e }, 'External geo lookup failed, falling back to geoip-lite');
-  }
-
-  if (!location.latitude || !location.longitude) {
-    const geo = geoip.lookup(ipToAudit) || {};
-    location.city = location.city || geo.city || '';
-    location.region = location.region || geo.region || '';
-    location.country = location.country || geo.country || '';
-    location.latitude = location.latitude || (geo.ll ? geo.ll[0] : null);
-    location.longitude = location.longitude || (geo.ll ? geo.ll[1] : null);
-  }
-
-  const geo = geoip.lookup(ipToAudit) || {};
-  let netDetails = { isp: 'Local Loopback Connection', asn: 'AS0' };
-  try {
-    netDetails = await getNetworkDetails(ipToAudit);
-  } catch (e) { /* ignore */ }
-
-  try {
-    const v = await incrementVisits(ip); // Count visits using real IP
-    
-    res.json({
-      ip: ipToAudit,
-      network: {
-        isp: netDetails.isp,
-        asn: netDetails.asn,
-        timezone: geo.timezone || 'UTC'
-      },
-      browser,
-      os,
-      device,
-      location,
-      visits: { total: v.total, unique: v.unique, yourVisits: v.yourVisits },
-      proxy: {
-        hasProxyHeaders,
-        parsedHeaders,
-        rawForwardedCount
-      },
-      anonymization: {
-        isVpnOrHosting,
-        isTorNode,
-        provider: hostingProvider || (isTorNode ? 'Tor Exit Node' : 'None')
-      },
-      simulation: {
-        active: !!(spoofIp || spoofUserAgent),
-        isSpoofedIp: !!spoofIp && spoofIp !== ip,
-        isSpoofedUserAgent: !!spoofUserAgent && spoofUserAgent !== ua,
-        realIp: ip,
-        realUserAgent: ua
-      },
-      securityAudit: {
-        userAgentMismatch
-      }
-    });
-  } catch (e) {
-    logger.error({ err: e }, 'Failed to update visits');
-    res.status(500).json({ error: 'Failed to update visits' });
-  }
-});
-
-app.get('/api/visits', async (req: Request, res: Response) => {
-  try {
-    if (redis && redisReady) {
-      const total = Number(await redis.get('visits:total') || 0);
-      const unique = Number(await redis.hlen('visits:byIp') || 0);
-      return res.json({ total, unique });
-    }
-    const visits = await readVisits();
-    return res.json({ total: visits.total || 0, unique: Object.keys(visits.byIp || {}).length });
-  } catch (e) {
-    logger.error({ err: e }, 'Failed to read visits');
-    return res.status(500).json({ error: 'Failed to read visits' });
-  }
-});
-
-app.post('/api/fingerprint', async (req: Request, res: Response) => {
-  try {
-    const { canvasHash, audioHash, browser, os, device } = req.body;
-    if (!canvasHash || !audioHash) {
-      return res.status(400).json({ error: 'Missing canvasHash or audioHash' });
-    }
-
-    let canvasUniqueness = 100.0;
-    let audioUniqueness = 100.0;
-    let totalProfiles = 1;
-
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        'INSERT INTO fingerprints (canvas_hash, audio_hash, browser, os, device) VALUES ($1, $2, $3, $4, $5)',
-        [canvasHash, audioHash, browser || 'Unknown', os || 'Unknown', device || 'desktop']
-      );
-
-      const totalRes = await pool.query('SELECT COUNT(*) FROM fingerprints');
-      totalProfiles = Number(totalRes.rows[0].count || 1);
-
-      const canvasRes = await pool.query('SELECT COUNT(*) FROM fingerprints WHERE canvas_hash = $1', [canvasHash]);
-      const canvasCount = Number(canvasRes.rows[0].count || 1);
-      canvasUniqueness = (canvasCount / totalProfiles) * 100;
-
-      const audioRes = await pool.query('SELECT COUNT(*) FROM fingerprints WHERE audio_hash = $1', [audioHash]);
-      const audioCount = Number(audioRes.rows[0].count || 1);
-      audioUniqueness = (audioCount / totalProfiles) * 100;
-    }
-
-    return res.json({
-      totalChecked: totalProfiles,
-      canvas: {
-        hash: canvasHash,
-        sharedPercentage: Number(canvasUniqueness.toFixed(2)),
-        isUnique: canvasUniqueness <= (100 / totalProfiles)
-      },
-      audio: {
-        hash: audioHash,
-        sharedPercentage: Number(audioUniqueness.toFixed(2)),
-        isUnique: audioUniqueness <= (100 / totalProfiles)
-      }
-    });
-  } catch (err) {
-    logger.error({ err }, 'Failed to compute fingerprint uniqueness');
-    return res.status(500).json({ error: 'Failed to process fingerprint' });
-  }
-});
-
-app.get('/api/dns-leak/init', (req: Request, res: Response) => {
-  const token = Math.random().toString(36).substring(2, 10);
-  const dnsDomain = process.env.DNS_DOMAIN || 'dns.localhost';
-  const testSubdomain = `${token}.${dnsDomain}`;
-  
-  if (!redis || !redisReady) {
-    dnsCache.set(token, []);
-  }
-  
-  res.json({ token, testSubdomain });
-});
-
-app.get('/api/dns-leak/check', async (req: Request, res: Response) => {
-  const token = req.query.token as string;
-  if (!token) {
-    return res.status(400).json({ error: 'Missing token parameter' });
-  }
-
-  let resolvers: string[] = [];
-
-  if (redis && redisReady) {
-    resolvers = await redis.smembers(`dns:leak:${token}`);
-  } else {
-    resolvers = dnsCache.get(token) || [];
-  }
-
-  const resolvedResolvers = resolvers.map(ip => {
-    const geo = geoip.lookup(ip) || {};
-    return {
-      ip,
-      country: geo.country || 'Unknown',
-      region: geo.region || 'Unknown',
-      city: geo.city || 'Unknown'
-    };
-  });
-
-  return res.json({
-    token,
-    resolversCount: resolvedResolvers.length,
-    resolvers: resolvedResolvers
-  });
-});
-
+// Health probe endpoints
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady });
+  res.json({ status: 'ok', uptime: process.uptime(), redis: visitsService.redisReady });
 });
 
 app.get('/ready', (req: Request, res: Response) => {
-  if (process.env.REDIS_URL) {
-    if (!redisReady) {
+  if (ENV.REDIS_URL) {
+    if (!visitsService.redisReady) {
       return res.status(503).json({ ready: false, status: 'Redis connection down' });
     }
     return res.json({ ready: true });
@@ -543,7 +106,9 @@ app.get('/ready', (req: Request, res: Response) => {
   return res.json({ ready: true });
 });
 
-app.get('/healthz', (req: Request, res: Response) => res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady }));
+app.get('/healthz', (req: Request, res: Response) => {
+  res.json({ status: 'ok', uptime: process.uptime(), redis: visitsService.redisReady });
+});
 
 app.get('/metrics', async (req: Request, res: Response) => {
   try {
@@ -556,6 +121,7 @@ app.get('/metrics', async (req: Request, res: Response) => {
   }
 });
 
+// Boot and Lifecycle Management
 function startServer(startPort: number, maxAttempts = 10) {
   let attempts = 0;
   function tryListen(port: number) {
@@ -563,9 +129,7 @@ function startServer(startPort: number, maxAttempts = 10) {
       console.log(`Server running on port ${port}`);
       function shutdown() {
         console.log('Shutting down...');
-        if (dnsServerInstance) {
-          dnsServerInstance.stop();
-        }
+        stopDnsServer();
         s.close(() => {
           console.log('Server closed');
           process.exit(0);
@@ -594,16 +158,10 @@ function startServer(startPort: number, maxAttempts = 10) {
   tryListen(startPort);
 }
 
-function startDnsServer() {
-  const dnsPort = Number(process.env.DNS_PORT) || 1053;
-  dnsServerInstance = new DNSServer(redis, dnsCache);
-  dnsServerInstance.start(dnsPort);
-}
-
 if (require.main === module) {
   initDatabase().then(() => {
-    startDnsServer();
-    startServer(Number(process.env.PORT) || PORT);
+    startDnsServer(visitsService.redis);
+    startServer(ENV.PORT);
   });
 }
 

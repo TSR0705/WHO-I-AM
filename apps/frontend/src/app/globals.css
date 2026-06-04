@@ -228,7 +228,7 @@ body {
 
 /* High-tech Control Panel */
 .control-panel {
-  position: absolute;
+  position: fixed;
   top: 1.5rem;
   right: 1.5rem;
   width: 310px;

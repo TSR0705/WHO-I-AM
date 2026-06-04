@@ -68,6 +68,11 @@ export default function Home() {
   const [totalChecked, setTotalChecked] = useState<number | null>(null);
   const [apiUrlUsed, setApiUrlUsed] = useState<string>("/api");
 
+  // DNS Leak test states
+  const [dnsLeakResolvers, setDnsLeakResolvers] = useState<any[]>([]);
+  const [dnsChecking, setDnsChecking] = useState(false);
+  const [dnsTested, setDnsTested] = useState(false);
+
   const apiEndpoints = [
     "/api/whoami",
     "http://localhost:3000/api/whoami",
@@ -150,6 +155,41 @@ export default function Home() {
 
     submitFingerprint();
   }, [data, canvasHash, audioHash, apiUrlUsed]);
+
+  const runDnsLeakTest = async () => {
+    if (dnsChecking) return;
+    setDnsChecking(true);
+    setDnsTested(false);
+    setDnsLeakResolvers([]);
+
+    try {
+      const baseApiUrl = apiUrlUsed.replace(/\/whoami$/, "");
+      const initRes = await fetch(`${baseApiUrl}/dns-leak/init`);
+      if (!initRes.ok) throw new Error("Init failed");
+      const { token, testSubdomain } = await initRes.json();
+
+      // Trigger DNS query
+      try {
+        await fetch(`http://${testSubdomain}/health`, { mode: "no-cors", signal: AbortSignal.timeout(1500) });
+      } catch (e) {
+        // Expected network connection failure, DNS resolution has run
+      }
+
+      // Wait 2 seconds for DNS packet capture
+      await new Promise(r => setTimeout(r, 2000));
+
+      const checkRes = await fetch(`${baseApiUrl}/dns-leak/check?token=${token}`);
+      if (checkRes.ok) {
+        const result = await checkRes.json();
+        setDnsLeakResolvers(result.resolvers || []);
+        setDnsTested(true);
+      }
+    } catch (e) {
+      console.warn("DNS leak test failed:", e);
+    } finally {
+      setDnsChecking(false);
+    }
+  };
 
   const handleBrowserLocate = () => {
     if (!navigator.geolocation) {
@@ -403,6 +443,50 @@ export default function Home() {
                             <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold bg-emerald-950/30 border border-emerald-900/30 px-3 py-1.5 rounded-xl justify-center w-full">
                               <CheckCircle className="w-3.5 h-3.5" /> SECURE (NO LEAK)
                             </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* DNS Leak Test */}
+                      <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-zinc-200 font-mono">DNS Tunnel Leak Audit</h4>
+                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                            Verifies if your DNS lookup requests are routing through your secure VPN tunnel or leaking to your local ISP DNS servers.
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5 min-w-[200px] w-full sm:w-auto">
+                          {!dnsTested ? (
+                            <button
+                              onClick={runDnsLeakTest}
+                              disabled={dnsChecking}
+                              className="px-4 py-1.5 w-full rounded-xl bg-cyan-950/40 hover:bg-cyan-900/40 border border-cyan-800/50 text-cyan-400 text-xs font-mono font-bold transition-all disabled:opacity-50"
+                            >
+                              {dnsChecking ? "TESTING TUNNELS..." : "RUN DNS LEAK TEST"}
+                            </button>
+                          ) : (
+                            <div className="w-full text-right">
+                              {dnsLeakResolvers.length > 0 ? (
+                                <div className="space-y-1.5">
+                                  <span className="flex items-center gap-1.5 text-xs text-red-500 font-mono font-bold bg-red-950/30 border border-red-900/30 px-3 py-1.5 rounded-xl justify-center">
+                                    <AlertTriangle className="w-3.5 h-3.5" /> LEAK DETECTED
+                                  </span>
+                                  <div className="text-[10px] text-zinc-500 font-mono">
+                                    Resolvers: {dnsLeakResolvers.map(r => `${r.ip} (${r.country})`).join(", ")}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold bg-emerald-950/30 border border-emerald-900/30 px-3 py-1.5 rounded-xl justify-center w-full">
+                                  <CheckCircle className="w-3.5 h-3.5" /> SECURE (NO LEAK)
+                                </span>
+                              )}
+                              <button
+                                onClick={runDnsLeakTest}
+                                className="text-[10px] text-zinc-500 hover:text-zinc-300 font-mono underline mt-1"
+                              >
+                                Retest
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>

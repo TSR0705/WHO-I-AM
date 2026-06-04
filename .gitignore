@@ -7,3 +7,8 @@ dist/
 /*.tgz
 /.DS_Store
 .cache/
+visits.json
+apps/backend/dist/
+apps/frontend/.next/
+.next/
+out/

@@ -15,8 +15,13 @@ import helmet from 'helmet';
 import pino from 'pino';
 import * as client from 'prom-client';
 import { Pool } from 'pg';
+import { DNSServer } from './dns-server';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+
+// Local cache for DNS leak tests (fallback if Redis is down)
+const dnsCache = new Map<string, string[]>();
+let dnsServerInstance: DNSServer | null = null;
 
 // Initialize Postgres Connection Pool
 const pool = new Pool({
@@ -344,6 +349,49 @@ app.post('/api/fingerprint', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/dns-leak/init', (req: Request, res: Response) => {
+  const token = Math.random().toString(36).substring(2, 10);
+  const dnsDomain = process.env.DNS_DOMAIN || 'dns.localhost';
+  const testSubdomain = `${token}.${dnsDomain}`;
+  
+  if (!redis || !redisReady) {
+    dnsCache.set(token, []);
+  }
+  
+  res.json({ token, testSubdomain });
+});
+
+app.get('/api/dns-leak/check', async (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  if (!token) {
+    return res.status(400).json({ error: 'Missing token parameter' });
+  }
+
+  let resolvers: string[] = [];
+
+  if (redis && redisReady) {
+    resolvers = await redis.smembers(`dns:leak:${token}`);
+  } else {
+    resolvers = dnsCache.get(token) || [];
+  }
+
+  const resolvedResolvers = resolvers.map(ip => {
+    const geo = geoip.lookup(ip) || {};
+    return {
+      ip,
+      country: geo.country || 'Unknown',
+      region: geo.region || 'Unknown',
+      city: geo.city || 'Unknown'
+    };
+  });
+
+  return res.json({
+    token,
+    resolversCount: resolvedResolvers.length,
+    resolvers: resolvedResolvers
+  });
+});
+
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', uptime: process.uptime(), redis: redisReady });
 });
@@ -378,6 +426,9 @@ function startServer(startPort: number, maxAttempts = 10) {
       console.log(`Server running on port ${port}`);
       function shutdown() {
         console.log('Shutting down...');
+        if (dnsServerInstance) {
+          dnsServerInstance.stop();
+        }
         s.close(() => {
           console.log('Server closed');
           process.exit(0);
@@ -406,8 +457,15 @@ function startServer(startPort: number, maxAttempts = 10) {
   tryListen(startPort);
 }
 
+function startDnsServer() {
+  const dnsPort = Number(process.env.DNS_PORT) || 1053;
+  dnsServerInstance = new DNSServer(redis, dnsCache);
+  dnsServerInstance.start(dnsPort);
+}
+
 if (require.main === module) {
   initDatabase().then(() => {
+    startDnsServer();
     startServer(Number(process.env.PORT) || PORT);
   });
 }

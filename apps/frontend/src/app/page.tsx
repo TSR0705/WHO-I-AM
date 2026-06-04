@@ -595,6 +595,52 @@ export default function Home() {
 
   const riskFindings = getRiskBreakdown();
 
+  if (!auditStarted) {
+    return (
+      <div className="flex flex-col w-screen h-screen min-h-screen bg-cyber-black text-zinc-100 font-sans selection:bg-neon-cyan/20 selection:text-neon-cyan relative overflow-hidden">
+        {/* Cyber Grid background */}
+        <div className="absolute inset-0 cyber-grid pointer-events-none no-print" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-3xl pointer-events-none no-print" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
+        
+        <DataGridHero {...gridCfg}>
+          <span className="text-[10px] text-neon-cyan font-mono tracking-[0.4em] uppercase block mb-2 animate-pulse-slow">
+            SYS.DIAGNOSTICS // WEB PRIVACY AUDITOR
+          </span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-widest uppercase bg-gradient-to-b from-white via-zinc-200 to-zinc-650 bg-clip-text text-transparent filter drop-shadow-[0_0_30px_rgba(255,255,255,0.05)] select-none">
+            WHO I AM
+          </h1>
+          <p className="max-w-md mx-auto text-xs text-zinc-400 font-mono tracking-wide leading-relaxed mt-2 uppercase">
+            An interactive digital footprint analyzer. Scan browser fingerprints, WebRTC leaks, and coordinate exposure.
+          </p>
+          <div className="buttons">
+            <button 
+              className="button"
+              onClick={() => triggerAuditPipeline()}
+            >
+              ENGAGE SCANNER
+            </button>
+            <button
+              className="button-outline"
+              onClick={() => setGridPanelOpen(true)}
+            >
+              GRID CONFIG (H)
+            </button>
+          </div>
+
+          {gridPanelOpen && (
+            <GridControlPanel
+              cfg={gridCfg}
+              setCfg={setGridCfg}
+              onClose={() => setGridPanelOpen(false)}
+              onRandomize={randomizeGrid}
+            />
+          )}
+        </DataGridHero>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-cyber-black text-zinc-100 font-sans selection:bg-neon-cyan/20 selection:text-neon-cyan relative">
       
@@ -641,52 +687,6 @@ export default function Home() {
       <div className="absolute inset-0 cyber-grid pointer-events-none no-print" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-3xl pointer-events-none no-print" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
-
-      {/* Header */}
-      <header className="relative border-b border-zinc-900/80 bg-cyber-zinc/60 backdrop-blur-md z-30 no-print">
-        {/* Accent neon line */}
-        <div className="h-[1px] w-full bg-gradient-to-r from-neon-cyan/35 via-neon-purple/20 to-transparent" />
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
-              <Shield className="w-5 h-5 text-neon-cyan" />
-            </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-white font-sans uppercase">
-                WhoAmI<span className="text-neon-cyan">.Audit</span>
-              </h1>
-              <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-0.5">
-                Privacy Diagnostics Sandbox
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex bg-zinc-950/60 border border-zinc-900 p-0.5 rounded-xl mr-2">
-              <button
-                onClick={() => setIsAdvancedMode(false)}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                BEGINNER
-              </button>
-              <button
-                onClick={() => setIsAdvancedMode(true)}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                ADVANCED
-              </button>
-            </div>
-            {auditComplete && (
-              <button
-                onClick={() => triggerAuditPipeline()}
-                className="px-4 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> RETEST
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20">
@@ -785,12 +785,41 @@ export default function Home() {
           <div className="space-y-8">
             
             {/* Top Controls Banner */}
-            <div className="flex justify-between items-center glass-panel rounded-2xl px-5 py-3.5 no-print">
-              <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-                <Info className="w-4 h-4 text-neon-cyan" />
-                <span>Diagnostics: <strong className="text-neon-cyan uppercase">{isAdvancedMode ? 'Advanced Mode' : 'Beginner Mode'}</strong></span>
+            <div className="flex flex-col sm:flex-row justify-between items-center glass-panel rounded-2xl px-5 py-3.5 gap-4 no-print">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
+                  <Shield className="w-4 h-4 text-neon-cyan" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-black tracking-tight text-white uppercase">
+                    WhoAmI<span className="text-neon-cyan">.Audit</span>
+                  </h1>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Mode Selector */}
+                <div className="flex bg-zinc-950/60 border border-zinc-900 p-0.5 rounded-xl text-[9px] font-mono font-bold">
+                  <button
+                    onClick={() => setIsAdvancedMode(false)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    BEGINNER
+                  </button>
+                  <button
+                    onClick={() => setIsAdvancedMode(true)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    ADVANCED
+                  </button>
+                </div>
+                
+                {/* Action buttons */}
+                <button
+                  onClick={() => triggerAuditPipeline()}
+                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> RETEST
+                </button>
                 <button
                   onClick={handleShareReport}
                   className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"

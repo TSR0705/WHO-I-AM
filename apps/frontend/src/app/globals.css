@@ -240,28 +240,47 @@ body {
 /* High-tech Control Panel */
 .control-panel {
   position: absolute;
-  top: 2rem;
-  right: 2rem;
-  width: 320px;
-  background: rgba(8, 12, 20, 0.85);
-  border: 1px solid rgba(0, 242, 255, 0.15);
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 310px;
+  background: rgba(8, 12, 20, 0.9);
+  border: 1px solid rgba(0, 242, 255, 0.2);
   backdrop-filter: blur(16px);
   border-radius: 1.25rem;
-  padding: 1.5rem;
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.75rem;
   z-index: 100;
   box-shadow: var(--shadow-md), 0 0 30px rgba(0, 242, 255, 0.05);
   color: #ffffff;
-  max-height: calc(100vh - 4rem);
+  max-height: calc(100vh - 3rem);
   overflow-y: auto;
+}
+
+/* Custom scrollbar for control panel to prevent truncation */
+.control-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.control-panel::-webkit-scrollbar-track {
+  background: rgba(8, 12, 20, 0.3);
+  border-radius: 99px;
+}
+
+.control-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.3);
+  border-radius: 99px;
+}
+
+.control-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 255, 0.6);
 }
 
 .control-panel h3 {
   font-family: var(--font-mono), monospace;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: hsl(var(--cyan));

@@ -28,59 +28,59 @@ export default function SimulationConsole({
   onReset
 }: SimulationConsoleProps) {
   return (
-    <div className="bg-zinc-950 border border-zinc-900 rounded-3xl overflow-hidden shadow-xl no-print">
+    <div className="glass-panel rounded-3xl overflow-hidden shadow-xl no-print">
       <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Settings className="w-4 h-4 text-cyan-400" />
+          <Settings className="w-4 h-4 text-neon-cyan" />
           <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">
-            FOOTPRINT SIMULATOR
+            SANDBOX SIMULATOR
           </h3>
         </div>
         <button 
           onClick={() => setSimulateSpoof(!simulateSpoof)}
-          className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 animate-pulse"
+          className="text-[10px] font-mono font-bold text-neon-cyan hover:text-neon-cyan/80 transition-colors uppercase tracking-wider cursor-pointer"
         >
-          {simulateSpoof ? "HIDE" : "SIMULATE SPOOF"}
+          {simulateSpoof ? "Collapse" : "Expand Sandbox"}
         </button>
       </div>
 
       {simulateSpoof && (
-        <div className="p-5 bg-zinc-950/80 space-y-4">
+        <div className="p-5 bg-zinc-950/20 space-y-5">
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">Simulate IP Address</label>
+            <label className="text-[9px] text-zinc-500 font-mono font-bold uppercase tracking-wider block">Spoof Client IPv4</label>
             <input
               type="text"
-              placeholder="e.g. 8.8.8.8"
+              placeholder="e.g., 8.8.8.8"
               value={spoofIp}
               onChange={(e) => setSpoofIp(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
+              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan/20 outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">Simulate User-Agent Profile</label>
+            <label className="text-[9px] text-zinc-500 font-mono font-bold uppercase tracking-wider block">Spoof User-Agent Header</label>
             <select
               value={selectedUaPreset}
               onChange={(e) => setSelectedUaPreset(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
+              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all cursor-pointer"
             >
-              <option value="current">Current Browser (No spoofing)</option>
-              <option value="iphone">Safari on Apple iPhone (iOS)</option>
-              <option value="linux">Chrome on Ubuntu Linux</option>
-              <option value="windows">Firefox on Windows 10/11</option>
-              <option value="tor">Tor Browser (Header Simulator)</option>
-              <option value="custom">Custom string...</option>
+              <option value="current" className="bg-zinc-950">Default Browser Profile</option>
+              <option value="iphone" className="bg-zinc-950">Safari - Apple iPhone (iOS)</option>
+              <option value="linux" className="bg-zinc-950">Chrome - Ubuntu Desktop (Linux)</option>
+              <option value="windows" className="bg-zinc-950">Firefox - Windows 11 (Windows)</option>
+              <option value="tor" className="bg-zinc-950">Tor Browser Proxy Header</option>
+              <option value="custom" className="bg-zinc-950">Custom string input...</option>
             </select>
           </div>
 
           {selectedUaPreset === "custom" && (
-            <div>
+            <div className="animate-fade-in">
               <input
                 type="text"
-                placeholder="Paste custom User-Agent string..."
+                placeholder="Enter custom User-Agent details..."
                 value={customUa}
                 onChange={(e) => setCustomUa(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 focus:border-cyan-500 outline-none text-xs font-mono text-white px-3 py-2 rounded-xl transition-all"
+                className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
               />
             </div>
           )}
@@ -88,13 +88,13 @@ export default function SimulationConsole({
           <div className="flex gap-3 pt-2">
             <button
               onClick={onApply}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 text-xs font-mono font-bold transition-all shadow-md"
+              className="flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 hover:border-neon-cyan/50 text-neon-cyan text-xs font-mono font-bold transition-all cursor-pointer tracking-wider"
             >
-              APPLY SIMULATOR
+              ENGAGE SPOOF
             </button>
             <button
               onClick={onReset}
-              className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 text-xs font-mono font-bold transition-all"
+              className="px-4 py-2.5 rounded-2xl bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-mono font-bold transition-all cursor-pointer"
             >
               RESET
             </button>

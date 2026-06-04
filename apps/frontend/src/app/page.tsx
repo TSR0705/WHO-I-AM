@@ -539,7 +539,7 @@ export default function Home() {
   const riskFindings = getRiskBreakdown();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#050608] text-zinc-100 font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+    <div className="flex flex-col min-h-screen bg-cyber-black text-zinc-100 font-sans selection:bg-neon-cyan/20 selection:text-neon-cyan relative">
       
       {/* Global CSS Print Style Sheets */}
       <style jsx global>{`
@@ -581,36 +581,40 @@ export default function Home() {
       `}</style>
 
       {/* Cyber Grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ea5e904_1px,transparent_1px),linear-gradient(to_bottom,#0ea5e904_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none no-print" />
+      <div className="absolute inset-0 cyber-grid pointer-events-none no-print" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-3xl pointer-events-none no-print" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
 
       {/* Header */}
-      <header className="relative border-b border-zinc-900 bg-zinc-950/70 backdrop-blur-md z-30 no-print">
+      <header className="relative border-b border-zinc-900/80 bg-cyber-zinc/60 backdrop-blur-md z-30 no-print">
+        {/* Accent neon line */}
+        <div className="h-[1px] w-full bg-gradient-to-r from-neon-cyan/35 via-neon-purple/20 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-950/40 border border-cyan-900/30 rounded-xl">
-              <Shield className="w-6 h-6 text-cyan-400" />
+            <div className="p-2 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
+              <Shield className="w-5 h-5 text-neon-cyan" />
             </div>
             <div>
-              <h1 className="text-xl font-bold font-mono tracking-tight text-white">
-                WhoAmI<span className="text-cyan-400">.Audit</span>
+              <h1 className="text-lg font-black tracking-tight text-white font-sans uppercase">
+                WhoAmI<span className="text-neon-cyan">.Audit</span>
               </h1>
-              <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">
+              <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-0.5">
                 Privacy Diagnostics Sandbox
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex bg-zinc-900/60 border border-zinc-800 p-0.5 rounded-lg mr-2">
+            <div className="flex bg-zinc-950/60 border border-zinc-900 p-0.5 rounded-xl mr-2">
               <button
                 onClick={() => setIsAdvancedMode(false)}
-                className={`px-3 py-1 rounded text-[10px] font-mono font-bold transition-all ${!isAdvancedMode ? 'bg-cyan-950 text-cyan-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
               >
                 BEGINNER
               </button>
               <button
                 onClick={() => setIsAdvancedMode(true)}
-                className={`px-3 py-1 rounded text-[10px] font-mono font-bold transition-all ${isAdvancedMode ? 'bg-cyan-950 text-cyan-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
               >
                 ADVANCED
               </button>
@@ -618,7 +622,7 @@ export default function Home() {
             {auditComplete && (
               <button
                 onClick={() => triggerAuditPipeline()}
-                className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono font-bold text-zinc-300 hover:text-white transition-all flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> RETEST
               </button>
@@ -631,57 +635,59 @@ export default function Home() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20">
         
         {error && (
-          <div className="bg-red-950/20 border border-red-900/50 p-4 rounded-2xl text-red-400 font-mono text-xs mb-6 flex items-center justify-between no-print animate-fade-in">
+          <div className="bg-neon-rose/5 border border-neon-rose/25 p-4 rounded-2xl text-neon-rose font-mono text-xs mb-6 flex items-center justify-between no-print animate-fade-in">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="hover:text-white text-lg">&times;</button>
+            <button onClick={() => setError(null)} className="hover:text-white text-lg font-bold">&times;</button>
           </div>
         )}
 
         {/* Landing screen if audit not started */}
         {!auditStarted && (
-          <div className="max-w-3xl mx-auto text-center py-20 space-y-8 no-print">
-            <div className="inline-block p-4 bg-cyan-950/20 border border-cyan-800/30 rounded-3xl animate-bounce-slow shadow-2xl">
-              <Shield className="w-16 h-16 text-cyan-400" />
+          <div className="max-w-3xl mx-auto text-center py-20 space-y-10 no-print">
+            <div className="inline-block p-4 bg-neon-cyan/5 border border-neon-cyan/25 rounded-3xl animate-pulse-slow shadow-2xl relative">
+              <div className="absolute inset-0 bg-neon-cyan/10 rounded-3xl blur-md" />
+              <Shield className="w-14 h-14 text-neon-cyan relative z-10" />
             </div>
             
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-white uppercase">
-                What does the internet <span className="text-cyan-400">know about you?</span>
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white uppercase font-sans leading-tight">
+                What does the internet <br />
+                <span className="bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-cyan bg-[size:200%] animate-cyber-glow bg-clip-text text-transparent">know about you?</span>
               </h2>
-              <p className="text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed font-mono">
+              <p className="text-xs text-zinc-400 max-w-lg mx-auto leading-relaxed font-mono">
                 Clear cookie blocking is no longer enough. Websites collect hardware hashes, check network tunnels, and query WebRTC APIs to compile unique, tracking fingerprints of your device.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
+            <div className="flex justify-center items-center pt-4">
               <button
                 onClick={() => triggerAuditPipeline()}
-                className="px-8 py-4 rounded-2xl bg-cyan-950/40 hover:bg-cyan-950/80 border border-cyan-700/60 text-cyan-400 font-mono font-bold transition-all shadow-lg hover:shadow-cyan-900/30 tracking-wider uppercase text-sm"
+                className="px-10 py-5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 hover:border-neon-cyan/60 text-neon-cyan font-mono font-bold transition-all shadow-lg shadow-neon-cyan/5 hover:shadow-neon-cyan/10 tracking-widest uppercase text-xs cursor-pointer hover:scale-[1.02]"
               >
-                START PRIVACY AUDIT
+                ENGAGE DIAGNOSTICS
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 text-left border-t border-zinc-900 max-w-2xl mx-auto">
-              <div className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-2xl">
-                <Globe className="w-4 h-4 text-cyan-400 mb-2" />
-                <div className="text-[10px] text-zinc-500 font-mono uppercase font-bold">Network Audits</div>
-                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">ISP & ASN leak validations</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 border-t border-zinc-900/60 max-w-2xl mx-auto">
+              <div className="glass-panel p-4 rounded-3xl text-left">
+                <Globe className="w-4 h-4 text-neon-cyan mb-2.5" />
+                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Network Audits</div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-1">ISP & ASN leak validations</div>
               </div>
-              <div className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-2xl">
-                <Cpu className="w-4 h-4 text-cyan-400 mb-2" />
-                <div className="text-[10px] text-zinc-500 font-mono uppercase font-bold">Fingerprinting</div>
-                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Canvas & audio synthesizers</div>
+              <div className="glass-panel p-4 rounded-3xl text-left">
+                <Cpu className="w-4 h-4 text-neon-cyan mb-2.5" />
+                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Fingerprinting</div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-1">Canvas & audio synthesizers</div>
               </div>
-              <div className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-2xl">
-                <MapPin className="w-4 h-4 text-cyan-400 mb-2" />
-                <div className="text-[10px] text-zinc-500 font-mono uppercase font-bold">GPS Coordinate</div>
-                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Physical node discrepancies</div>
+              <div className="glass-panel p-4 rounded-3xl text-left">
+                <MapPin className="w-4 h-4 text-neon-cyan mb-2.5" />
+                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">GPS Coordinate</div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-1">Physical node discrepancies</div>
               </div>
-              <div className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-2xl">
-                <Lock className="w-4 h-4 text-cyan-400 mb-2" />
-                <div className="text-[10px] text-zinc-500 font-mono uppercase font-bold">Secure Contexts</div>
-                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Security configurations</div>
+              <div className="glass-panel p-4 rounded-3xl text-left">
+                <Lock className="w-4 h-4 text-neon-cyan mb-2.5" />
+                <div className="text-[9px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Secure Contexts</div>
+                <div className="text-[10px] text-zinc-400 font-mono mt-1">Security configurations</div>
               </div>
             </div>
           </div>
@@ -689,41 +695,41 @@ export default function Home() {
 
         {/* Live scanning progress overlay */}
         {auditStarted && !auditComplete && (
-          <div className="max-w-2xl mx-auto py-12 space-y-8 no-print">
-            <div className="bg-zinc-950 border border-zinc-900 p-6 rounded-3xl shadow-xl space-y-6">
+          <div className="max-w-2xl mx-auto py-16 space-y-8 no-print">
+            <div className="glass-panel p-6 rounded-3xl shadow-2xl space-y-6">
               
               {/* Category tracker */}
               <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
                 <div className="flex items-center gap-3">
-                  <Terminal className="w-5 h-5 text-cyan-400" />
+                  <Terminal className="w-4 h-4 text-neon-cyan animate-pulse" />
                   <div>
-                    <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Scanned Category {activeCategoryIndex + 1}/8</div>
-                    <div className="text-sm font-bold text-white font-mono">{testCategories[activeCategoryIndex].name}</div>
+                    <div className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Scanning category {activeCategoryIndex + 1}/8</div>
+                    <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-0.5">{testCategories[activeCategoryIndex].name}</div>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full border-2 border-cyan-800 border-t-cyan-400 animate-spin" />
+                <div className="w-7 h-7 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin" />
               </div>
 
               {/* Console log display */}
-              <div className="bg-zinc-950/90 border border-zinc-900/80 p-4 rounded-2xl h-[240px] overflow-y-auto font-mono text-xs text-zinc-400 space-y-1">
+              <div className="bg-black/40 border border-zinc-900/60 p-4 rounded-2xl h-[240px] overflow-y-auto font-mono text-[11px] text-zinc-400 space-y-1 scrollbar-cyber">
                 {scanLogs.map((log, i) => (
                   <div key={i} className="flex gap-2">
-                    <span className="text-zinc-600 select-none">&gt;</span>
-                    <span className={log.includes('[STARTING]') ? 'text-cyan-400 font-bold' : 'text-zinc-300'}>{log}</span>
+                    <span className="text-neon-cyan/40 select-none">&gt;</span>
+                    <span className={log.includes('[STARTING]') ? 'text-neon-cyan font-bold' : 'text-zinc-300'}>{log}</span>
                   </div>
                 ))}
                 <div ref={terminalEndRef} />
               </div>
 
               {/* Progress Bar */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
-                  <span>ANALYZING SYSTEM PARAMETERS</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+                  <span>Running Diagnostic Sequence</span>
                   <span>{Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}%</span>
                 </div>
-                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-zinc-950 border border-zinc-900/60 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-cyan-500 transition-all duration-100" 
+                    className="h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-100 shadow-[0_0_10px_rgba(0,242,255,0.4)]" 
                     style={{ width: `${((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100}%` }}
                   />
                 </div>
@@ -738,31 +744,29 @@ export default function Home() {
           <div className="space-y-8">
             
             {/* Top Controls Banner */}
-            <div className="flex justify-between items-center bg-zinc-950/50 border border-zinc-900 rounded-2xl px-5 py-3 no-print">
+            <div className="flex justify-between items-center glass-panel rounded-2xl px-5 py-3.5 no-print">
               <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-                <Info className="w-4 h-4 text-cyan-400" />
-                <span>Viewing diagnostics in <strong className="text-cyan-400 uppercase">{isAdvancedMode ? 'Advanced Mode' : 'Beginner Mode'}</strong></span>
+                <Info className="w-4 h-4 text-neon-cyan" />
+                <span>Diagnostics: <strong className="text-neon-cyan uppercase">{isAdvancedMode ? 'Advanced Mode' : 'Beginner Mode'}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleShareReport}
-                  className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-lg transition-all flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Share2 className="w-3.5 h-3.5" /> SHARE
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-lg transition-all flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" /> EXPORT PDF
                 </button>
               </div>
             </div>
 
-            {/* Results Summary Dashboard */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-card">
-              
-              {/* Radial Dial Score */}
+            {/* Row 1: Core Dashboard Gauges & Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 print-card">
               <PrivacyScoreDial
                 score={score}
                 localIPsExposed={localIPs.length > 0}
@@ -772,56 +776,137 @@ export default function Home() {
                 onExplainClick={handleOpenEducation}
               />
 
-              {/* Severity Counts */}
-              <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 flex flex-col justify-between print-card lg:col-span-2">
+              {/* Severity counts ledger */}
+              <div className="glass-panel rounded-3xl p-6 flex flex-col justify-between print-card relative overflow-hidden">
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none" />
                 <div>
-                  <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Threat Severity Log</span>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="bg-red-950/10 border border-red-900/20 p-4 rounded-2xl flex flex-col justify-between h-24">
-                      <span className="text-[10px] text-red-400 font-mono font-bold uppercase">High Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-red-500">{riskFindings.filter(r => r.type === "high").length}</div>
+                  <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Threat Severity Ledger</span>
+                  <div className="grid grid-cols-3 gap-3 mt-4 font-mono">
+                    <div className="bg-neon-rose/5 border border-neon-rose/10 p-3 rounded-2xl flex flex-col justify-between h-22">
+                      <span className="text-[9px] text-neon-rose font-bold uppercase">High Risk</span>
+                      <div className="text-2xl font-extrabold text-neon-rose drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">{riskFindings.filter(r => r.type === "high").length}</div>
                     </div>
-                    <div className="bg-amber-950/10 border border-amber-900/20 p-4 rounded-2xl flex flex-col justify-between h-24">
-                      <span className="text-[10px] text-amber-400 font-mono font-bold uppercase">Medium Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-amber-500">{riskFindings.filter(r => r.type === "medium").length}</div>
+                    <div className="bg-neon-amber/5 border border-neon-amber/10 p-3 rounded-2xl flex flex-col justify-between h-22">
+                      <span className="text-[9px] text-neon-amber font-bold uppercase">Med Risk</span>
+                      <div className="text-2xl font-extrabold text-neon-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">{riskFindings.filter(r => r.type === "medium").length}</div>
                     </div>
-                    <div className="bg-zinc-900/40 border border-zinc-900 p-4 rounded-2xl flex flex-col justify-between h-24">
-                      <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase">Low Risk</span>
-                      <div className="text-3xl font-extrabold font-mono text-cyan-400">{riskFindings.filter(r => r.type === "low").length}</div>
+                    <div className="bg-neon-cyan/5 border border-neon-cyan/10 p-3 rounded-2xl flex flex-col justify-between h-22">
+                      <span className="text-[9px] text-neon-cyan font-bold uppercase">Low Risk</span>
+                      <div className="text-2xl font-extrabold text-neon-cyan drop-shadow-[0_0_10px_rgba(0,242,255,0.3)]">{riskFindings.filter(r => r.type === "low").length}</div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="text-xs font-mono text-zinc-500 mt-4 border-t border-zinc-900 pt-4 flex justify-between items-center">
-                  <span>Mitigation Grade: {riskFindings.filter(r => r.type === "high").length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED"}</span>
-                  <span className="text-cyan-400 font-bold hover:underline cursor-pointer" onClick={() => setActiveTab("education")}>
-                    Learn mitigation mechanics →
-                  </span>
+                <div className="text-[11px] font-mono text-zinc-500 mt-4 border-t border-zinc-900/60 pt-4 flex justify-between items-center relative z-10">
+                  <span>Mitigation Grade: <strong className={riskFindings.filter(r => r.type === "high").length === 0 ? "text-neon-emerald" : "text-neon-amber"}>{riskFindings.filter(r => r.type === "high").length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED"}</strong></span>
                 </div>
               </div>
 
+              {/* Simulation Form Panel */}
+              <SimulationConsole
+                spoofIp={spoofIp}
+                setSpoofIp={setSpoofIp}
+                selectedUaPreset={selectedUaPreset}
+                setSelectedUaPreset={setSelectedUaPreset}
+                customUa={customUa}
+                setCustomUa={setCustomUa}
+                simulateSpoof={simulateSpoof}
+                setSimulateSpoof={setSimulateSpoof}
+                onApply={handleApplySimulation}
+                onReset={handleResetSimulation}
+              />
             </div>
 
-            {/* Findings List (Strengths/Weaknesses Summary Report) */}
-            <RiskFindingsCard findings={riskFindings} />
+            {/* Row 2: Diagnostics Ledger & Location Map */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-card">
+              <div className="lg:col-span-2">
+                <RiskFindingsCard findings={riskFindings} />
+              </div>
 
-            {/* Test Categories Audit Grid */}
+              {/* Geocoding Map */}
+              <div className="glass-panel border border-zinc-900 rounded-3xl p-4 shadow-sm space-y-4 print-card flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-neon-cyan" />
+                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Geolocation Target Map</h3>
+                    </div>
+                    <HelpCircle 
+                      className="w-4 h-4 text-zinc-600 hover:text-neon-cyan cursor-pointer no-print"
+                      onClick={() => handleOpenEducation("location")}
+                    />
+                  </div>
+
+                  {mapCoords ? (
+                    <DynamicMap 
+                      lat={mapCoords.lat} 
+                      lon={mapCoords.lon} 
+                      label={mapCoords.label} 
+                    />
+                  ) : (
+                    <div className="w-full h-[220px] rounded-2xl bg-zinc-950/40 border border-zinc-900 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono">
+                      <EyeOff className="w-8 h-8 mb-2 text-zinc-700" />
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">NO COORDINATES PRESENT</span>
+                      <span className="text-[9px] mt-1 text-zinc-650 leading-relaxed">Local address or proxy shields are masking server geolocation. Try locating manually below.</span>
+                    </div>
+                  )}
+
+                  {gpsData && (
+                    <div className="bg-zinc-900/40 border border-zinc-850 p-3 rounded-2xl font-mono text-[10px] space-y-1">
+                      <div className="flex justify-between text-zinc-400">
+                        <span>Accuracy Radius:</span>
+                        <span className="text-neon-cyan font-bold">~{gpsData.accuracy.toFixed(1)} meters</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>IP vs. GPS Discrepancy:</span>
+                        <span className="text-neon-amber font-bold">EXPOSED</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-2 no-print">
+                  <button
+                    onClick={handleBrowserLocate}
+                    disabled={locating}
+                    className="flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 text-neon-cyan text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm cursor-pointer"
+                  >
+                    <Compass className={`w-4 h-4 ${locating ? 'animate-spin' : ''}`} />
+                    {locating ? "LOCATING..." : "REQUEST GPS"}
+                  </button>
+                  
+                  {(gpsData || customCoords) && (
+                    <button
+                      onClick={() => {
+                        setGpsData(null);
+                        setCustomCoords(null);
+                      }}
+                      className="px-4 py-2.5 rounded-2xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 text-zinc-300 text-xs font-mono font-bold transition-all cursor-pointer"
+                    >
+                      RESET
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: Technical Audits Category Grid & History */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-grid">
               
-              <div className="lg:col-span-2 space-y-8 print-grid">
-                
-                {/* Category 1: Network Identity Audit */}
-                <AuditCategoryCard
-                  title="Network Identity Audit"
-                  icon={<Globe className="w-4 h-4 text-cyan-400" />}
-                  eduKey="ip"
-                  onExplainClick={handleOpenEducation}
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Category cards subgrid */}
+              <div className="lg:col-span-2 space-y-6 print-grid">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Category 1: Network Identity Audit */}
+                  <AuditCategoryCard
+                    title="Network Identity Audit"
+                    icon={<Globe className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="ip"
+                    onExplainClick={handleOpenEducation}
+                  >
                     <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Public IP Address</span>
-                        <span className="font-bold text-cyan-400 select-all">{data.ip}</span>
+                        <span className="font-bold text-neon-cyan select-all tracking-wide">{data.ip}</span>
                       </div>
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">ISP Network Provider</span>
@@ -839,18 +924,15 @@ export default function Home() {
                           {data.location.city || "Unknown"}, {data.location.region || "Unknown"}, {data.location.country || "Unknown"}
                         </span>
                       </div>
-                    </div>
-
-                    <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Vpn / Datacenter Route</span>
                         <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                           {data.anonymization.isVpnOrHosting ? (
-                            <span className="text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900/30 px-1.5 py-0.5 rounded">
+                            <span className="text-neon-emerald font-bold bg-neon-emerald/10 border border-neon-emerald/20 px-2 py-0.5 rounded-md">
                               {data.anonymization.provider}
                             </span>
                           ) : (
-                            <span className="text-zinc-500 font-normal">No (Datacenter Ranges Secure)</span>
+                            <span className="text-zinc-500 font-normal">No (Datacenter Secure)</span>
                           )}
                         </span>
                       </div>
@@ -858,8 +940,8 @@ export default function Home() {
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Tor Relay Exit</span>
                         <span className="font-bold text-zinc-300">
                           {data.anonymization.isTorNode ? (
-                            <span className="text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900/30 px-1.5 py-0.5 rounded">
-                              ACTIVE TOR RELAY
+                            <span className="text-neon-emerald font-bold bg-neon-emerald/10 border border-neon-emerald/20 px-2 py-0.5 rounded-md">
+                              ACTIVE TOR exit RELAY
                             </span>
                           ) : (
                             <span className="text-zinc-500 font-normal">No (Direct IP Route)</span>
@@ -871,17 +953,15 @@ export default function Home() {
                         <span className="font-bold text-zinc-300">{data.network?.timezone || 'UTC'}</span>
                       </div>
                     </div>
-                  </div>
-                </AuditCategoryCard>
+                  </AuditCategoryCard>
 
-                {/* Category 2: Device Profile Audit */}
-                <AuditCategoryCard
-                  title="Device Profile Audit"
-                  icon={<Cpu className="w-4 h-4 text-cyan-400" />}
-                  eduKey="browser"
-                  onExplainClick={handleOpenEducation}
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Category 2: Device Profile Audit */}
+                  <AuditCategoryCard
+                    title="Device Profile Audit"
+                    icon={<Cpu className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="browser"
+                    onExplainClick={handleOpenEducation}
+                  >
                     <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Browser Profile</span>
@@ -892,7 +972,7 @@ export default function Home() {
                         <span className="font-bold text-zinc-300 flex items-center gap-2">
                           {data.os}
                           {data.securityAudit.userAgentMismatch && (
-                            <span className="text-[9px] font-bold bg-red-950/20 border border-red-900/30 text-red-400 px-1 rounded">
+                            <span className="text-[9px] font-bold bg-neon-rose/10 border border-neon-rose/25 text-neon-rose px-1.5 py-0.5 rounded-md animate-pulse">
                               MISMATCH
                             </span>
                           )}
@@ -901,15 +981,12 @@ export default function Home() {
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Form Factor</span>
                         <span className="font-bold text-zinc-300 uppercase flex items-center gap-1.5">
-                          {data.device === "mobile" ? <Smartphone className="w-3.5 h-3.5 text-cyan-400" /> :
-                           data.device === "tablet" ? <Tablet className="w-3.5 h-3.5 text-cyan-400" /> :
-                           <Laptop className="w-3.5 h-3.5 text-cyan-400" />}
+                          {data.device === "mobile" ? <Smartphone className="w-3.5 h-3.5 text-neon-cyan" /> :
+                           data.device === "tablet" ? <Tablet className="w-3.5 h-3.5 text-neon-cyan" /> :
+                           <Laptop className="w-3.5 h-3.5 text-neon-cyan" />}
                           {data.device}
                         </span>
                       </div>
-                    </div>
-
-                    <div className="space-y-4 font-mono text-xs">
                       <div>
                         <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Display Screen Parameters</span>
                         <span className="font-bold text-zinc-300">
@@ -924,340 +1001,250 @@ export default function Home() {
                       </div>
                       {isAdvancedMode && (
                         <div>
-                          <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Client Device CPU architecture</span>
+                          <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Client Hardware CPU architecture</span>
                           <span className="font-bold text-zinc-300">
                             {typeof navigator !== 'undefined' ? ((navigator as any).deviceMemory ? `Memory: ${(navigator as any).deviceMemory}GB | CPU cores: ${navigator.hardwareConcurrency || 'Unknown'}` : `CPU cores: ${navigator.hardwareConcurrency || 'Unknown'}`) : 'Unknown'}
                           </span>
                         </div>
                       )}
                     </div>
-                  </div>
-                </AuditCategoryCard>
+                  </AuditCategoryCard>
 
-                {/* Category 4: Browser Fingerprint Audit */}
-                <AuditCategoryCard
-                  title={isAdvancedMode ? "Browser Fingerprinting Audit" : "Browser Identity Profile"}
-                  icon={<Cpu className="w-4 h-4 text-cyan-400" />}
-                  eduKey="canvas"
-                  onExplainClick={handleOpenEducation}
-                  paddingStyle="p-0"
-                >
-                  <div className="divide-y divide-zinc-900 font-mono text-xs">
-                    <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h4 className="font-bold text-zinc-200 uppercase tracking-wide">
-                          {isAdvancedMode ? "HTML5 Canvas Render Hash" : "Unique Rendering Signature"}
-                        </h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-sm">
-                          Assesses graphic GPU calculations. Uniquely logs device outputs without cookie cookies.
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs bg-zinc-900/60 border border-zinc-900 px-3 py-1.5 rounded-xl font-bold select-all">
-                          {canvasHash}
+                  {/* Category 4: Browser Fingerprint Audit */}
+                  <AuditCategoryCard
+                    title={isAdvancedMode ? "Browser Fingerprinting Audit" : "Browser Identity Profile"}
+                    icon={<Cpu className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="canvas"
+                    onExplainClick={handleOpenEducation}
+                    paddingStyle="p-0"
+                  >
+                    <div className="divide-y divide-zinc-900/60 font-mono text-xs">
+                      <div className="p-4 flex flex-col gap-2">
+                        <div>
+                          <h4 className="font-bold text-zinc-200 uppercase tracking-wide text-[10px]">
+                            {isAdvancedMode ? "HTML5 Canvas Render Hash" : "Unique Rendering Signature"}
+                          </h4>
+                          <p className="text-[9px] text-zinc-500 mt-0.5 leading-normal">
+                            Assesses graphic GPU variance. Uniquely logs device outputs.
+                          </p>
+                        </div>
+                        <div className="text-xs bg-zinc-950/60 border border-zinc-900/80 px-3.5 py-2 rounded-xl font-bold select-all tracking-wide text-zinc-300">
+                          {canvasHash.substring(0, 16)}...
                         </div>
                         {canvasUniqueness !== null && (
-                          <div className="text-[9px] text-zinc-500 mt-1">
-                            Shared by: <strong className="text-cyan-400">{canvasUniqueness.toFixed(2)}%</strong> of visitors
+                          <div className="text-[9px] text-zinc-500">
+                            Shared by: <strong className="text-neon-cyan">{canvasUniqueness.toFixed(2)}%</strong> of visitors
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h4 className="font-bold text-zinc-200 uppercase tracking-wide">WebGL Hardware Synthesis</h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-sm">
-                          Queries local graphic card rendering details and GPU shader configurations.
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs bg-zinc-900/60 border border-zinc-900 px-3 py-1.5 rounded-xl font-bold select-all">
+                      <div className="p-4 flex flex-col gap-2">
+                        <div>
+                          <h4 className="font-bold text-zinc-200 uppercase tracking-wide text-[10px]">WebGL Hardware Synthesis</h4>
+                          <p className="text-[9px] text-zinc-500 mt-0.5 leading-normal">
+                            Queries graphic card details and shader configs.
+                          </p>
+                        </div>
+                        <div className="text-xs bg-zinc-950/60 border border-zinc-900/80 px-3.5 py-2 rounded-xl font-bold select-all tracking-wide text-zinc-300">
                           {webglInfo.hash.substring(0, 16)}...
                         </div>
                         {isAdvancedMode && (
-                          <div className="text-[9px] text-zinc-500 mt-1 max-w-[200px] truncate">
+                          <div className="text-[9px] text-zinc-500 truncate">
                             GPU: {webglInfo.renderer}
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h4 className="font-bold text-zinc-200 uppercase tracking-wide">Web Audio context synthesis</h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-sm">
-                          Checks sound processing card variance using silent synthesized frequencies.
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs bg-zinc-900/60 border border-zinc-900 px-3 py-1.5 rounded-xl font-bold select-all">
-                          {audioHash}
+                      <div className="p-4 flex flex-col gap-2">
+                        <div>
+                          <h4 className="font-bold text-zinc-200 uppercase tracking-wide text-[10px]">Web Audio context synthesis</h4>
+                          <p className="text-[9px] text-zinc-500 mt-0.5 leading-normal">
+                            Checks sound processing variance using synthesized frequencies.
+                          </p>
+                        </div>
+                        <div className="text-xs bg-zinc-950/60 border border-zinc-900/80 px-3.5 py-2 rounded-xl font-bold select-all tracking-wide text-zinc-300">
+                          {audioHash.substring(0, 16)}...
                         </div>
                         {audioUniqueness !== null && (
-                          <div className="text-[9px] text-zinc-500 mt-1">
-                            Shared by: <strong className="text-cyan-400">{audioUniqueness.toFixed(2)}%</strong> of visitors
+                          <div className="text-[9px] text-zinc-500">
+                            Shared by: <strong className="text-neon-cyan">{audioUniqueness.toFixed(2)}%</strong> of visitors
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                </AuditCategoryCard>
+                  </AuditCategoryCard>
 
-                {/* Category 5 & 6: WebRTC & DNS leaks */}
-                <AuditCategoryCard
-                  title="WebRTC & DNS Privacy"
-                  icon={<Shield className="w-4 h-4 text-cyan-400" />}
-                  eduKey="webrtc"
-                  onExplainClick={handleOpenEducation}
-                  paddingStyle="p-0"
-                >
-                  <div className="divide-y divide-zinc-900 font-mono text-xs">
-                    <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h4 className="font-bold text-zinc-200 uppercase tracking-wide">
-                          {isAdvancedMode ? "WebRTC ICE Leak candidates" : "Local Network Exposure Check"}
-                        </h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-sm">
-                          WebRTC exposes your local router client subnet, bypasses standard IP shields.
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {localIPs.length > 0 ? (
-                          <div>
-                            <span className="text-xs text-amber-500 font-bold bg-amber-950/20 border border-amber-900/30 px-2.5 py-1 rounded">
-                              EXPOSED
-                            </span>
-                            <div className="text-[9px] text-zinc-500 mt-1.5">Leaks: {localIPs.join(", ")}</div>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900/30 px-2.5 py-1 rounded">
-                            SECURE
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h4 className="font-bold text-zinc-200 uppercase tracking-wide">
-                          {isAdvancedMode ? "DNS Resolver Leak audit" : "Domain Query Log Check"}
-                        </h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-sm">
-                          Checks if your domain lookup resolvers match the subnet of your VPN IP address.
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {dnsTested ? (
-                          dnsLeakResolvers.length > 0 ? (
+                  {/* Category 5 & 6: WebRTC & DNS leaks */}
+                  <AuditCategoryCard
+                    title="WebRTC & DNS Privacy"
+                    icon={<Shield className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="webrtc"
+                    onExplainClick={handleOpenEducation}
+                    paddingStyle="p-0"
+                  >
+                    <div className="divide-y divide-zinc-900/60 font-mono text-xs">
+                      <div className="p-5 flex justify-between items-center gap-4">
+                        <div>
+                          <h4 className="font-bold text-zinc-200 uppercase tracking-wide text-[10px]">
+                            {isAdvancedMode ? "WebRTC ICE Leak candidates" : "Local Network Exposure"}
+                          </h4>
+                          <p className="text-[9px] text-zinc-500 mt-0.5 leading-normal max-w-[180px]">
+                            WebRTC exposes your local router client subnet, bypassing IP shields.
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          {localIPs.length > 0 ? (
                             <div>
-                              <span className="text-xs text-red-500 font-bold bg-red-950/20 border border-red-900/30 px-2.5 py-1 rounded">
-                                LEAK DETECTED
+                              <span className="text-[10px] text-neon-amber font-bold bg-neon-amber/10 border border-neon-amber/20 px-2 py-0.5 rounded-md animate-pulse">
+                                EXPOSED
                               </span>
-                              <div className="text-[9px] text-zinc-500 mt-1.5 truncate max-w-[200px]">
-                                DNS: {dnsLeakResolvers.map(r => r.ip).join(", ")}
-                              </div>
+                              <div className="text-[9px] text-zinc-500 mt-1 max-w-[100px] truncate">Leaks: {localIPs.join(", ")}</div>
                             </div>
                           ) : (
-                            <span className="text-xs text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900/30 px-2.5 py-1 rounded">
+                            <span className="text-[10px] text-neon-emerald font-bold bg-neon-emerald/10 border border-neon-emerald/20 px-2 py-0.5 rounded-md">
                               SECURE
                             </span>
-                          )
-                        ) : (
-                          <span className="text-xs text-zinc-500">RUN TEST ABOVE</span>
-                        )}
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-5 flex justify-between items-center gap-4">
+                        <div>
+                          <h4 className="font-bold text-zinc-200 uppercase tracking-wide text-[10px]">
+                            {isAdvancedMode ? "DNS Resolver Leak audit" : "Domain Query Log Check"}
+                          </h4>
+                          <p className="text-[9px] text-zinc-500 mt-0.5 leading-normal max-w-[180px]">
+                            Checks if resolver subnets bypass your secure VPN tunnel.
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          {dnsTested ? (
+                            dnsLeakResolvers.length > 0 ? (
+                              <div>
+                                <span className="text-[10px] text-neon-rose font-bold bg-neon-rose/10 border border-neon-rose/25 px-2 py-0.5 rounded-md animate-pulse">
+                                  LEAK DETECTED
+                                </span>
+                                <div className="text-[9px] text-zinc-500 mt-1 truncate max-w-[100px]">
+                                  DNS: {dnsLeakResolvers.map(r => r.ip).join(", ")}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-neon-emerald font-bold bg-neon-emerald/10 border border-neon-emerald/20 px-2 py-0.5 rounded-md">
+                                SECURE
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-[9px] text-zinc-500 font-bold uppercase">UNTESTED</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AuditCategoryCard>
+                  </AuditCategoryCard>
 
-                {/* Category 7: Browser Capabilities */}
-                <AuditCategoryCard
-                  title="Browser Capabilities Audit"
-                  icon={<Terminal className="w-4 h-4 text-cyan-400" />}
-                  eduKey="capabilities"
-                  onExplainClick={handleOpenEducation}
-                >
-                  <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-                    <div className="space-y-3">
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Cookies Enabled:</span>
-                        <span className={capabilities?.cookiesEnabled ? "text-cyan-400" : "text-red-400"}>
-                          {capabilities?.cookiesEnabled ? "YES" : "NO"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">LocalStorage Supported:</span>
-                        <span className={capabilities?.localStorageSupported ? "text-cyan-400" : "text-red-400"}>
-                          {capabilities?.localStorageSupported ? "YES" : "NO"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">SessionStorage:</span>
-                        <span className={capabilities?.sessionStorageSupported ? "text-cyan-400" : "text-red-400"}>
-                          {capabilities?.sessionStorageSupported ? "YES" : "NO"}
-                        </span>
+                  {/* Category 7: Browser Capabilities */}
+                  <AuditCategoryCard
+                    title="Browser Capabilities Audit"
+                    icon={<Terminal className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="capabilities"
+                    onExplainClick={handleOpenEducation}
+                  >
+                    <div className="grid grid-cols-1 gap-3 font-mono text-xs">
+                      <div className="space-y-3">
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">Cookies Enabled:</span>
+                          <span className={capabilities?.cookiesEnabled ? "text-neon-cyan font-bold" : "text-neon-rose"}>
+                            {capabilities?.cookiesEnabled ? "YES" : "NO"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">LocalStorage:</span>
+                          <span className={capabilities?.localStorageSupported ? "text-neon-cyan font-bold" : "text-neon-rose"}>
+                            {capabilities?.localStorageSupported ? "YES" : "NO"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">SessionStorage:</span>
+                          <span className={capabilities?.sessionStorageSupported ? "text-neon-cyan font-bold" : "text-neon-rose"}>
+                            {capabilities?.sessionStorageSupported ? "YES" : "NO"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">IndexedDB Access:</span>
+                          <span className={capabilities?.indexedDbSupported ? "text-neon-cyan font-bold" : "text-neon-rose"}>
+                            {capabilities?.indexedDbSupported ? "YES" : "NO"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">Service Workers:</span>
+                          <span className={capabilities?.serviceWorkerSupported ? "text-neon-cyan" : "text-zinc-600"}>
+                            {capabilities?.serviceWorkerSupported ? "SUPPORTED" : "UNSUPPORTED"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">JavaScript Logic:</span>
+                          <span className="text-neon-emerald font-bold">ACTIVE</span>
+                        </div>
                       </div>
                     </div>
+                  </AuditCategoryCard>
 
-                    <div className="space-y-3">
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">IndexedDB Access:</span>
-                        <span className={capabilities?.indexedDbSupported ? "text-cyan-400" : "text-red-400"}>
-                          {capabilities?.indexedDbSupported ? "YES" : "NO"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Service Workers:</span>
-                        <span className={capabilities?.serviceWorkerSupported ? "text-cyan-400" : "text-zinc-500"}>
-                          {capabilities?.serviceWorkerSupported ? "SUPPORTED" : "UNSUPPORTED"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">JavaScript Execution:</span>
-                        <span className="text-emerald-400">ACTIVE</span>
+                  {/* Category 8: Security Configurations */}
+                  <AuditCategoryCard
+                    title="Security Configuration Audit"
+                    icon={<Lock className="w-4 h-4 text-neon-cyan" />}
+                    eduKey="security"
+                    onExplainClick={handleOpenEducation}
+                  >
+                    <div className="grid grid-cols-1 gap-3 font-mono text-xs">
+                      <div className="space-y-3">
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">HTTPS Encryption:</span>
+                          <span className={securityConfig?.isHttps ? "text-neon-emerald font-bold" : "text-neon-rose font-bold"}>
+                            {securityConfig?.isHttps ? "ACTIVE" : "INSECURE"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">Secure Context Mode:</span>
+                          <span className={securityConfig?.isSecureContext ? "text-neon-emerald font-bold" : "text-neon-rose font-bold"}>
+                            {securityConfig?.isSecureContext ? "YES" : "NO"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">Referrer Leakage:</span>
+                          <span className={securityConfig?.referrer !== 'None' ? "text-neon-amber font-bold truncate max-w-[120px]" : "text-neon-emerald"}>
+                            {securityConfig?.referrer === 'None' ? "BLOCKED" : securityConfig?.referrer}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-zinc-900/60 pb-1.5">
+                          <span className="text-zinc-500">Mixed Content Block:</span>
+                          <span className={securityConfig?.mixedContentBlocked ? "text-neon-emerald font-bold" : "text-neon-amber"}>
+                            {securityConfig?.mixedContentBlocked ? "ENFORCED" : "INACTIVE"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AuditCategoryCard>
+                  </AuditCategoryCard>
 
-                {/* Category 8: Security Configurations */}
-                <AuditCategoryCard
-                  title="Security Configuration Audit"
-                  icon={<Lock className="w-4 h-4 text-cyan-400" />}
-                  eduKey="security"
-                  onExplainClick={handleOpenEducation}
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-xs">
-                    <div className="space-y-3">
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">HTTPS Encryption:</span>
-                        <span className={securityConfig?.isHttps ? "text-emerald-400" : "text-red-500 font-bold"}>
-                          {securityConfig?.isHttps ? "ACTIVE" : "INSECURE"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Secure Context Mode:</span>
-                        <span className={securityConfig?.isSecureContext ? "text-emerald-400" : "text-red-500 font-bold"}>
-                          {securityConfig?.isSecureContext ? "YES" : "NO"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Referrer Leakage:</span>
-                        <span className={securityConfig?.referrer !== 'None' ? "text-amber-500 truncate max-w-[150px]" : "text-emerald-400"}>
-                          {securityConfig?.referrer === 'None' ? "BLOCKED" : securityConfig?.referrer}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Mixed Content Block:</span>
-                        <span className={securityConfig?.mixedContentBlocked ? "text-emerald-400" : "text-amber-400"}>
-                          {securityConfig?.mixedContentBlocked ? "ENFORCED" : "INACTIVE"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </AuditCategoryCard>
-
+                </div>
               </div>
 
-              {/* Column 3: Geocoding Map & Simulation Controls */}
-              <div className="space-y-8 print-card">
+              {/* Column 3: History Trends & Stats */}
+              <div className="space-y-8 print-card no-print">
                 
-                {/* Geocoding Map */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-4 shadow-sm space-y-4 print-card">
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-cyan-400" />
-                      <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Geolocation Target Map</h3>
-                    </div>
-                    <HelpCircle 
-                      className="w-4 h-4 text-zinc-600 hover:text-zinc-400 cursor-pointer no-print"
-                      onClick={() => handleOpenEducation("location")}
-                    />
-                  </div>
-
-                  {mapCoords ? (
-                    <DynamicMap 
-                      lat={mapCoords.lat} 
-                      lon={mapCoords.lon} 
-                      label={mapCoords.label} 
-                    />
-                  ) : (
-                    <div className="w-full h-[320px] rounded-2xl bg-zinc-950/40 border border-zinc-900 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono">
-                      <EyeOff className="w-8 h-8 mb-2 text-zinc-700" />
-                      <span className="text-xs uppercase tracking-wider font-bold text-zinc-400">NO COORDINATES PRESENT</span>
-                      <span className="text-[10px] mt-1 text-zinc-600 leading-relaxed">Local address or proxy shields are masking server geolocation. Try locating manually below.</span>
-                    </div>
-                  )}
-
-                  {gpsData && (
-                    <div className="bg-zinc-900/40 border border-zinc-800 p-3 rounded-2xl font-mono text-xs space-y-1">
-                      <div className="flex justify-between text-zinc-400">
-                        <span>Accuracy Radius:</span>
-                        <span className="text-cyan-400 font-bold">~{gpsData.accuracy.toFixed(1)} meters</span>
-                      </div>
-                      <div className="flex justify-between text-zinc-400">
-                        <span>IP vs. GPS Discrepancy:</span>
-                        <span className="text-amber-500">EXPOSED</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2 no-print">
-                    <button
-                      onClick={handleBrowserLocate}
-                      disabled={locating}
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-950/30 hover:bg-cyan-950/60 border border-cyan-900/50 text-cyan-400 text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
-                    >
-                      <Compass className={`w-4 h-4 ${locating ? 'animate-spin' : ''}`} />
-                      {locating ? "LOCATING..." : "REQUEST BROWSER GPS"}
-                    </button>
-                    
-                    {(gpsData || customCoords) && (
-                      <button
-                        onClick={() => {
-                          setGpsData(null);
-                          setCustomCoords(null);
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 text-zinc-300 text-xs font-mono font-bold transition-all"
-                      >
-                        RESET
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Simulation Form Panel */}
-                <SimulationConsole
-                  spoofIp={spoofIp}
-                  setSpoofIp={setSpoofIp}
-                  selectedUaPreset={selectedUaPreset}
-                  setSelectedUaPreset={setSelectedUaPreset}
-                  customUa={customUa}
-                  setCustomUa={setCustomUa}
-                  simulateSpoof={simulateSpoof}
-                  setSimulateSpoof={setSimulateSpoof}
-                  onApply={handleApplySimulation}
-                  onReset={handleResetSimulation}
-                />
-
                 {/* Local History trends */}
-                <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 shadow-sm space-y-4 no-print">
+                <div className="glass-panel rounded-3xl p-6 shadow-sm space-y-5">
                   <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest border-b border-zinc-900/80 pb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-cyan-400" /> Local Audit History
+                    <Clock className="w-4 h-4 text-neon-cyan" /> Local Audit History
                   </h3>
-                  <div className="space-y-3 font-mono text-xs">
+                  <div className="space-y-4 font-mono text-xs">
                     {localHistory.map((item, index) => (
                       <div key={index} className="flex justify-between items-center border-b border-zinc-900/60 pb-2">
-                        <div className="space-y-0.5">
+                        <div className="space-y-1">
                           <span className="text-[10px] text-zinc-500 block">{item.timestamp}</span>
                           <span className="text-zinc-400 tracking-wide truncate max-w-[150px] inline-block">{item.ip}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-cyan-400 font-bold bg-cyan-950/20 border border-cyan-900/30 px-2 py-0.5 rounded">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-neon-cyan font-bold bg-neon-cyan/5 border border-neon-cyan/20 px-2 py-0.5 rounded-lg">
                             {item.score}/100
                           </span>
                           <span className="font-extrabold text-white">{item.grade}</span>
@@ -1265,17 +1252,41 @@ export default function Home() {
                       </div>
                     ))}
                     {localHistory.length === 0 && (
-                      <div className="text-center py-4 text-zinc-600 text-[11px] uppercase tracking-wider">
-                        No previous audit runs found
+                      <div className="text-center py-6 text-zinc-650 text-[10px] uppercase tracking-wider">
+                        No previous records found
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Technical Node Parameters */}
+                <div className="glass-panel rounded-3xl p-6 shadow-sm space-y-4 font-mono text-xs">
+                  <h3 className="font-bold text-xs text-white uppercase tracking-widest border-b border-zinc-900/80 pb-3">
+                    Diagnostics Parameters
+                  </h3>
+                  <div className="space-y-3 font-mono text-[10px] text-zinc-400">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">API Gateway URL:</span>
+                      <span className="text-zinc-300 truncate max-w-[140px]" title={apiUrlUsed}>{apiUrlUsed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Total Scanned:</span>
+                      <span className="text-zinc-300 font-bold">{totalChecked ?? "Connecting..."} users</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Local Cache:</span>
+                      <span className="text-neon-emerald font-semibold">Active Filesystem</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Status Check:</span>
+                      <span className="text-neon-cyan animate-pulse">Ready</span>
+                    </div>
                   </div>
                 </div>
 
               </div>
 
             </div>
-
           </div>
         )}
 

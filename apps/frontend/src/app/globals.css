@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+
+  /* Custom Neon Palette */
+  --color-cyber-black: #02040a;
+  --color-cyber-zinc: #080c14;
+  --color-neon-cyan: #00f2ff;
+  --color-neon-purple: #a855f7;
+  --color-neon-emerald: #10b981;
+  --color-neon-rose: #f43f5e;
+  --color-neon-amber: #f59e0b;
+
+  /* Animations */
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-scanline: scanline 8s linear infinite;
+  --animate-cyber-glow: cyber-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes cyber-glow {
+  0% { text-shadow: 0 0 5px rgba(0, 242, 255, 0.2), 0 0 10px rgba(0, 242, 255, 0.1); }
+  100% { text-shadow: 0 0 15px rgba(0, 242, 255, 0.6), 0 0 25px rgba(0, 242, 255, 0.3); }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #02040a;
+  --foreground: #f4f4f5;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism utility card templates */
+.glass-panel {
+  background: rgba(2, 4, 10, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(0, 242, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 242, 255, 0.05);
+}
+
+/* High-tech matrix scan line grid overlay */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 242, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 242, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Cyber Console Scrollbar styling */
+.scrollbar-cyber::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-cyber::-webkit-scrollbar-track {
+  background: rgba(2, 4, 10, 0.5);
+  border-radius: 99px;
+}
+
+.scrollbar-cyber::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.2);
+  border-radius: 99px;
+}
+
+.scrollbar-cyber::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 255, 0.5);
 }

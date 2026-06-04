@@ -27,41 +27,41 @@ export default function ScannerConsole({
   }, [logs]);
 
   return (
-    <div className="mb-8 bg-zinc-950 border border-zinc-900 rounded-2xl shadow-xl overflow-hidden no-print">
-      <div className="px-5 py-3 border-b border-zinc-900 bg-zinc-950 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">Diagnostic Console Log</span>
+    <div className="mb-8 glass-panel rounded-2xl shadow-xl overflow-hidden no-print">
+      <div className="px-5 py-3 border-b border-zinc-900 bg-zinc-950/40 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Terminal className="w-4 h-4 text-neon-cyan animate-pulse" />
+          <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">Diagnostic Logs Terminal</span>
           {isScanning && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-900/30 animate-pulse font-mono">
+            <span className="text-[9px] px-2 py-0.5 rounded-md bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 animate-pulse font-mono">
               SCANNING... {progress}%
             </span>
           )}
         </div>
         <button 
           onClick={onToggleCollapse}
-          className="text-zinc-500 hover:text-zinc-300"
+          className="text-zinc-500 hover:text-zinc-300 transition-colors"
         >
-          {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          {collapsed ? <ChevronDown className="w-4.5 h-4.5" /> : <ChevronUp className="w-4.5 h-4.5" />}
         </button>
       </div>
       
       {!collapsed && (
-        <div className="p-4 bg-zinc-950/90 font-mono text-xs text-zinc-400 h-[140px] overflow-y-auto space-y-1 scrollbar-thin">
+        <div className="p-4 bg-black/60 font-mono text-[11px] text-zinc-400 h-[150px] overflow-y-auto space-y-1 scrollbar-cyber">
           {logs.map((log, i) => (
             <div key={i} className="flex gap-2">
-              <span className="text-zinc-600 select-none">&gt;</span>
+              <span className="text-neon-cyan/55 select-none font-bold">&gt;</span>
               <span className={
-                log.includes('[ALERT]') ? 'text-amber-400 font-bold' :
-                log.includes('[CRITICAL]') ? 'text-red-400 font-bold' :
-                log.includes('[INIT]') || log.includes('[COMPLETE]') ? 'text-cyan-400' :
+                log.includes('[ALERT]') ? 'text-neon-amber font-semibold' :
+                log.includes('[CRITICAL]') ? 'text-neon-rose font-semibold' :
+                log.includes('[INIT]') || log.includes('[COMPLETE]') || log.includes('[STARTING]') ? 'text-neon-cyan font-bold' :
                 'text-zinc-300'
               }>{log}</span>
             </div>
           ))}
           {isScanning && (
-            <div className="flex gap-2 items-center text-cyan-400/70 animate-pulse">
-              <span className="text-zinc-600 select-none">&gt;</span>
+            <div className="flex gap-2 items-center text-neon-cyan/60 animate-pulse">
+              <span className="text-neon-cyan/30 select-none">&gt;</span>
               <span>Fetching diagnostic buffers...</span>
             </div>
           )}

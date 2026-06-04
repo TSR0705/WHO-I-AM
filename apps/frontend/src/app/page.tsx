@@ -622,16 +622,16 @@ export default function Home() {
               Controls (H)
             </button>
           </div>
-
-          {gridPanelOpen && (
-            <GridControlPanel
-              cfg={gridCfg}
-              setCfg={setGridCfg}
-              onClose={() => setGridPanelOpen(false)}
-              onRandomize={randomizeGrid}
-            />
-          )}
         </DataGridHero>
+
+        {gridPanelOpen && (
+          <GridControlPanel
+            cfg={gridCfg}
+            setCfg={setGridCfg}
+            onClose={() => setGridPanelOpen(false)}
+            onRandomize={randomizeGrid}
+          />
+        )}
       </div>
     );
   }

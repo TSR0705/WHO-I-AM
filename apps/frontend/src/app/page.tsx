@@ -62,6 +62,12 @@ export default function Home() {
   const [customCoords, setCustomCoords] = useState<{ lat: number; lon: number; label: string } | null>(null);
   const [locating, setLocating] = useState(false);
 
+  // Uniqueness analytics states
+  const [canvasUniqueness, setCanvasUniqueness] = useState<number | null>(null);
+  const [audioUniqueness, setAudioUniqueness] = useState<number | null>(null);
+  const [totalChecked, setTotalChecked] = useState<number | null>(null);
+  const [apiUrlUsed, setApiUrlUsed] = useState<string>("/api");
+
   const apiEndpoints = [
     "/api/whoami",
     "http://localhost:3000/api/whoami",
@@ -81,6 +87,7 @@ export default function Home() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const result = await response.json();
         setData(result);
+        setApiUrlUsed(url);
         setLoading(false);
         return;
       } catch (err) {
@@ -107,6 +114,42 @@ export default function Home() {
     // Resolve Audio Fingerprint
     getAudioFingerprint().then(hash => setAudioHash(hash));
   }, []);
+
+  // Submit fingerprint parameters to get comparative analytics
+  useEffect(() => {
+    if (!data || canvasHash === "detecting..." || audioHash === "detecting...") return;
+
+    async function submitFingerprint() {
+      const baseApiUrl = apiUrlUsed.replace(/\/whoami$/, "");
+      const postUrl = `${baseApiUrl}/fingerprint`;
+
+      try {
+        const res = await fetch(postUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            canvasHash,
+            audioHash,
+            browser: data?.browser,
+            os: data?.os,
+            device: data?.device
+          })
+        });
+        if (res.ok) {
+          const stats = await res.json();
+          setCanvasUniqueness(stats.canvas.sharedPercentage);
+          setAudioUniqueness(stats.audio.sharedPercentage);
+          setTotalChecked(stats.totalChecked);
+        }
+      } catch (e) {
+        console.warn("Failed to submit fingerprint:", e);
+      }
+    }
+
+    submitFingerprint();
+  }, [data, canvasHash, audioHash, apiUrlUsed]);
 
   const handleBrowserLocate = () => {
     if (!navigator.geolocation) {
@@ -376,6 +419,11 @@ export default function Home() {
                           <div className="text-xs bg-zinc-900/80 border border-zinc-800 px-3 py-1.5 rounded-xl inline-block text-zinc-300 font-semibold shadow-inner select-all">
                             {canvasHash}
                           </div>
+                          {canvasUniqueness !== null && (
+                            <div className="text-[10px] text-zinc-500 mt-1">
+                              Shared by: <span className="text-cyan-400 font-bold">{canvasUniqueness}%</span> of users
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -391,6 +439,11 @@ export default function Home() {
                           <div className="text-xs bg-zinc-900/80 border border-zinc-800 px-3 py-1.5 rounded-xl inline-block text-zinc-300 font-semibold shadow-inner select-all">
                             {audioHash}
                           </div>
+                          {audioUniqueness !== null && (
+                            <div className="text-[10px] text-zinc-500 mt-1">
+                              Shared by: <span className="text-cyan-400 font-bold">{audioUniqueness}%</span> of users
+                            </div>
+                          )}
                         </div>
                       </div>
 

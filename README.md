@@ -35,6 +35,9 @@ docker run --rm -p 3000:3000 --name whoami-local whoami:local
 
 2. Build & run with Redis using docker-compose (recommended):
 
+> [!IMPORTANT]
+> The local setup now connects to the cloud Supabase database instead of a local Postgres instance to ensure consistency with production. You must create a `.env` file at the root of the project containing your Supabase `DATABASE_URL` before running Docker Compose.
+
 ```powershell
 docker-compose up --build -d
 docker-compose ps

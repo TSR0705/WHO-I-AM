@@ -14,14 +14,24 @@ export class VisitsService {
 
   constructor() {
     if (ENV.REDIS_URL) {
-      this.redis = new Redis(ENV.REDIS_URL, {
-        retryStrategy: (times) => Math.min(50 * times, 2000),
-        maxRetriesPerRequest: null,
-        enableReadyCheck: true,
-      });
-      this.redis.on('ready', () => { this.redisReady = true; logger.info('Redis ready'); });
-      this.redis.on('error', (err) => { this.redisReady = false; logger.warn({ err }, 'Redis error'); });
-      this.redis.on('end', () => { this.redisReady = false; logger.info('Redis connection closed'); });
+      try {
+        this.redis = new Redis(ENV.REDIS_URL, {
+          retryStrategy: (times) => Math.min(50 * times, 2000),
+          maxRetriesPerRequest: null,
+          enableReadyCheck: true,
+        });
+        this.redis.on('ready', () => { this.redisReady = true; logger.info('Redis ready'); });
+        this.redis.on('error', (err) => { this.redisReady = false; logger.warn({ err }, 'Redis error'); });
+        this.redis.on('end', () => { this.redisReady = false; logger.info('Redis connection closed'); });
+      } catch (err) {
+        logger.error({ err }, 'Failed to initialize Redis client, explicitly falling back to null');
+        this.redis = null;
+        this.redisReady = false;
+      }
+    } else {
+      logger.info('No REDIS_URL provided. Explicitly falling back to local JSON file db');
+      this.redis = null;
+      this.redisReady = false;
     }
 
     // Ensure local file fallback db exists

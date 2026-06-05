@@ -35,13 +35,7 @@ const uaPresets: Record<string, string> = {
   tor: "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0"
 };
 
-const apiEndpoints = [
-  "/api/whoami",
-  "http://localhost:3000/api/whoami",
-  "http://localhost:3001/api/whoami",
-  "http://127.0.0.1:3000/api/whoami",
-  "http://127.0.0.1:3001/api/whoami"
-];
+const apiEndpoint = "/api/whoami";
 
 export function useAuditPipeline() {
   const [auditStarted, setAuditStarted] = useState(false);
@@ -138,28 +132,28 @@ export function useAuditPipeline() {
       if (c === 0) {
         let fetchedData: WhoAmIData | null = null;
         let lastError: any = null;
-        let fetchUrl = "";
+        let fetchUrl = apiEndpoint;
         const clientOsHint = typeof navigator !== 'undefined' ? (navigator.platform || "") : "";
 
-        for (const url of apiEndpoints) {
+        const queryParams: string[] = [];
+        if (overrideIp) queryParams.push(`spoofIp=${encodeURIComponent(overrideIp)}`);
+        if (overrideUa) queryParams.push(`spoofUserAgent=${encodeURIComponent(overrideUa)}`);
+        if (clientOsHint) queryParams.push(`clientOs=${encodeURIComponent(clientOsHint)}`);
+        const queryStr = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+
+        try {
+          const response = await fetch(`${apiEndpoint}${queryStr}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          fetchedData = await response.json();
+        } catch (err) {
           try {
-            let fullUrl = url;
-            const queryParams: string[] = [];
-            if (overrideIp) queryParams.push(`spoofIp=${encodeURIComponent(overrideIp)}`);
-            if (overrideUa) queryParams.push(`spoofUserAgent=${encodeURIComponent(overrideUa)}`);
-            if (clientOsHint) queryParams.push(`clientOs=${encodeURIComponent(clientOsHint)}`);
-
-            if (queryParams.length > 0) {
-              fullUrl += `?${queryParams.join("&")}`;
-            }
-
-            const response = await fetch(fullUrl, { cache: "no-store" });
+            const absoluteUrl = `${window.location.origin}${apiEndpoint}${queryStr}`;
+            const response = await fetch(absoluteUrl, { cache: "no-store" });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             fetchedData = await response.json();
-            fetchUrl = url;
-            break;
-          } catch (err) {
-            lastError = err;
+            fetchUrl = absoluteUrl;
+          } catch (err2) {
+            lastError = err2;
           }
         }
 

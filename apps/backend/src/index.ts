@@ -160,7 +160,10 @@ function startServer(startPort: number, maxAttempts = 10) {
 
 if (require.main === module) {
   initDatabase().then(() => {
-    startDnsServer(visitsService.redis);
+    // Only start DNS server in non-serverless environments
+    if (!process.env.VERCEL) {
+      startDnsServer(visitsService.redis);
+    }
     startServer(ENV.PORT);
   });
 }

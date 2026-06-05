@@ -85,6 +85,18 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// Middleware to ensure DB is initialized before processing any requests (avoids serverless race conditions)
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  if (ENV.DATABASE_URL) {
+    try {
+      await initDatabase();
+    } catch (err) {
+      logger.error({ err }, 'DB initialization middleware failed');
+    }
+  }
+  next();
+});
+
 // Register Decoupled API Routers
 app.use('/api', whoamiRouter);
 app.use('/api', visitsRouter);
@@ -158,14 +170,17 @@ function startServer(startPort: number, maxAttempts = 10) {
   tryListen(startPort);
 }
 
+// Trigger database initialization asynchronously on startup
+initDatabase().catch(err => {
+  logger.error({ err }, 'Failed to initialize database on startup');
+});
+
 if (require.main === module) {
-  initDatabase().then(() => {
-    // Only start DNS server in non-serverless environments
-    if (!process.env.VERCEL) {
-      startDnsServer(visitsService.redis);
-    }
-    startServer(ENV.PORT);
-  });
+  // Only start DNS server in non-serverless environments
+  if (!process.env.VERCEL) {
+    startDnsServer(visitsService.redis);
+  }
+  startServer(ENV.PORT);
 }
 
 export default app;

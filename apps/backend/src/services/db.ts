@@ -8,29 +8,46 @@ export const pool = new Pool({
   connectionString: ENV.DATABASE_URL
 });
 
-export async function initDatabase() {
+export let dbInitPromise: Promise<void> | null = null;
+
+export function initDatabase(): Promise<void> {
   if (!ENV.DATABASE_URL) {
     logger.info('No DATABASE_URL provided, skipping Postgres initialization');
-    return;
+    return Promise.resolve();
   }
-  
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS fingerprints (
-        id SERIAL PRIMARY KEY,
-        canvas_hash VARCHAR(64) NOT NULL,
-        audio_hash VARCHAR(64) NOT NULL,
-        browser VARCHAR(255) NOT NULL,
-        os VARCHAR(255) NOT NULL,
-        device VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_canvas_hash ON fingerprints(canvas_hash);
-      CREATE INDEX IF NOT EXISTS idx_audio_hash ON fingerprints(audio_hash);
-    `);
-    logger.info('Postgres database schema initialized');
-  } catch (err) {
-    logger.error({ err }, 'Failed to initialize Postgres database');
+
+  if (!dbInitPromise) {
+    dbInitPromise = (async () => {
+      try {
+        logger.info('Initializing Postgres database schema (idempotent checks)...');
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS fingerprints (
+            id SERIAL PRIMARY KEY,
+            canvas_hash VARCHAR(64) NOT NULL,
+            audio_hash VARCHAR(64) NOT NULL,
+            browser VARCHAR(255) NOT NULL,
+            os VARCHAR(255) NOT NULL,
+            device VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_canvas_hash ON fingerprints(canvas_hash);
+        `);
+        
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_audio_hash ON fingerprints(audio_hash);
+        `);
+        
+        logger.info('Postgres database schema initialized successfully');
+      } catch (err) {
+        logger.error({ err }, 'Failed to initialize Postgres database');
+        dbInitPromise = null; // Reset promise so subsequent requests can retry
+        throw err;
+      }
+    })();
   }
+
+  return dbInitPromise;
 }

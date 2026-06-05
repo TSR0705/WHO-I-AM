@@ -17,7 +17,8 @@ import {
   Lock,
   ArrowLeft,
   HelpCircle,
-  EyeOff
+  EyeOff,
+  Activity
 } from "lucide-react";
 
 // Components
@@ -39,7 +40,7 @@ import SecurityPanel from "../components/categories/SecurityPanel";
 // Custom Hook & Constants
 import { useAuditPipeline, testCategories } from "../hooks/useAuditPipeline";
 
-// Dynamic Leaflet Map wrapper
+// Dynamic Leaflet Map wrapper with Dark Matter custom container class
 const DynamicMap = dynamic(() => import("../components/Map"), { 
   ssr: false,
   loading: () => (
@@ -97,7 +98,7 @@ export default function Dashboard() {
   } = useAuditPipeline();
 
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-  const [terminalCollapsed, setTerminalCollapsed] = useState(false);
+  const [terminalCollapsed, setTerminalCollapsed] = useState(true);
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const [selectedEduKey, setSelectedEduKey] = useState<string | null>(null);
 
@@ -128,6 +129,24 @@ export default function Dashboard() {
 
   const handleOpenEducation = (key: string) => {
     setSelectedEduKey(key);
+  };
+
+  // Helper to resolve real-time category statuses
+  const getCardStatus = (index: number) => {
+    if (!auditStarted) return "pending";
+    if (auditComplete) return "completed";
+    if (activeCategoryIndex > index) return "completed";
+    if (activeCategoryIndex === index) return "scanning";
+    return "pending";
+  };
+
+  // DNS & WebRTC are items 4 and 5 in the scanning pipeline
+  const getDnsWebRtcStatus = () => {
+    if (!auditStarted) return "pending";
+    if (auditComplete) return "completed";
+    if (activeCategoryIndex > 5) return "completed";
+    if (activeCategoryIndex === 4 || activeCategoryIndex === 5) return "scanning";
+    return "pending";
   };
 
   return (
@@ -174,11 +193,11 @@ export default function Dashboard() {
 
       {/* Cyber Grid background */}
       <div className="absolute inset-0 cyber-grid pointer-events-none no-print" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-3xl pointer-events-none no-print" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none no-print" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/3 rounded-full blur-3xl pointer-events-none no-print" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/3 rounded-full blur-3xl pointer-events-none no-print" />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20 space-y-6">
         
         {error && (
           <div className="bg-neon-rose/5 border border-neon-rose/25 p-4 rounded-2xl text-neon-rose font-mono text-xs mb-6 flex items-center justify-between no-print animate-fade-in">
@@ -187,72 +206,53 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Live scanning progress overlay */}
+        {/* Real-time Scanning Progress Header Bar */}
         {!auditComplete && (
-          <div className="max-w-2xl mx-auto py-16 space-y-8 no-print">
-            <div className="glass-panel p-6 rounded-3xl shadow-2xl space-y-6">
-              
-              {/* Category tracker */}
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
-                <div className="flex items-center gap-3">
-                  <Terminal className="w-4 h-4 text-neon-cyan animate-pulse" />
-                  <div>
-                    <div className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Scanning category {activeCategoryIndex + 1}/8</div>
-                    <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-0.5">{testCategories[activeCategoryIndex].name}</div>
-                  </div>
-                </div>
-                <div className="w-7 h-7 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin" />
-              </div>
-
-              {/* Console log display */}
-              <div className="bg-black/40 border border-zinc-900/60 p-4 rounded-2xl h-[240px] overflow-y-auto font-mono text-[11px] text-zinc-400 space-y-1 scrollbar-cyber">
-                {scanLogs.map((log, i) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="text-neon-cyan/40 select-none">&gt;</span>
-                    <span className={log.includes('[STARTING]') ? 'text-neon-cyan font-bold' : 'text-zinc-300'}>{log}</span>
-                  </div>
-                ))}
-                <div ref={terminalEndRef} />
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
-                  <span>Running Diagnostic Sequence</span>
-                  <span>{Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-zinc-950 border border-zinc-900/60 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-100 shadow-[0_0_10px_rgba(0,242,255,0.4)]" 
-                    style={{ width: `${((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100}%` }}
-                  />
+          <div className="glass-panel p-5 rounded-3xl border border-neon-cyan/5 shadow-lg space-y-4 no-print animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin flex items-center justify-center shrink-0" />
+                <div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Scanning category {activeCategoryIndex + 1}/8</div>
+                  <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-0.5">{testCategories[activeCategoryIndex].name}</div>
                 </div>
               </div>
-
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Overall Progress:</span>
+                <span className="text-xs font-mono font-bold text-neon-cyan ml-1.5">{Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}%</span>
+              </div>
+            </div>
+            
+            <div className="w-full h-1.5 bg-zinc-950 border border-zinc-900/60 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-200 shadow-[0_0_10px_rgba(0,242,255,0.25)]" 
+                style={{ width: `${((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100}%` }}
+              />
             </div>
           </div>
         )}
 
-        {/* Diagnostic Dashboard (Scans Complete) */}
-        {auditComplete && data && (
-          <div className="space-y-8">
+        {/* Diagnostic Dashboard (Rendered Instantly) */}
+        {auditStarted && (
+          <div className="space-y-6">
             
             {/* Top Controls Banner */}
-            <div className="flex flex-col sm:flex-row justify-between items-center glass-panel rounded-2xl px-5 py-3.5 gap-4 no-print">
+            <div className="flex flex-col sm:flex-row justify-between items-center glass-panel rounded-3xl px-6 py-4 gap-4 no-print shadow-md">
               <div className="flex items-center gap-3">
                 <Link
                   href="/"
-                  className="p-2 bg-zinc-950/60 hover:bg-zinc-900 border border-zinc-900 text-zinc-400 hover:text-white rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center"
+                  className="p-2.5 bg-zinc-950/60 hover:bg-zinc-900 border border-zinc-900 text-zinc-400 hover:text-white rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center"
                   title="Return to Home"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <div className="p-2 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
-                  <Shield className="w-4 h-4 text-neon-cyan" />
+                <div className="p-2.5 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
+                  <Shield className="w-4 h-4 text-neon-cyan animate-pulse" />
                 </div>
                 <div>
-                  <h1 className="text-sm font-black tracking-tight text-white uppercase">
+                  <h1 className="text-sm font-black tracking-tight text-white uppercase flex items-center gap-1.5">
                     WhoAmI<span className="text-neon-cyan">.Audit</span>
+                    {!auditComplete && <Activity className="w-3.5 h-3.5 text-neon-cyan animate-pulse" />}
                   </h1>
                 </div>
               </div>
@@ -261,13 +261,13 @@ export default function Dashboard() {
                 <div className="flex bg-zinc-950/60 border border-zinc-900 p-0.5 rounded-xl text-[9px] font-mono font-bold">
                   <button
                     onClick={() => setIsAdvancedMode(false)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
                   >
                     BEGINNER
                   </button>
                   <button
                     onClick={() => setIsAdvancedMode(true)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
                   >
                     ADVANCED
                   </button>
@@ -276,19 +276,22 @@ export default function Dashboard() {
                 {/* Action buttons */}
                 <button
                   onClick={() => triggerAuditPipeline()}
-                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                  disabled={!auditComplete}
+                  className={`px-3 py-1.5 bg-zinc-900/60 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md ${!auditComplete ? 'opacity-50 cursor-not-allowed' : 'hover:bg-zinc-900 cursor-pointer'}`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5" /> RETEST
+                  <RefreshCw className={`w-3.5 h-3.5 ${!auditComplete ? 'animate-spin' : ''}`} /> RETEST
                 </button>
                 <button
                   onClick={handleShareReport}
-                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  disabled={!auditComplete}
+                  className={`px-3 py-1.5 bg-zinc-900/60 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md ${!auditComplete ? 'opacity-50 cursor-not-allowed' : 'hover:bg-zinc-900 cursor-pointer'}`}
                 >
                   <Share2 className="w-3.5 h-3.5" /> SHARE
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="px-3 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  disabled={!auditComplete}
+                  className={`px-3 py-1.5 bg-zinc-900/60 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md ${!auditComplete ? 'opacity-50 cursor-not-allowed' : 'hover:bg-zinc-900 cursor-pointer'}`}
                 >
                   <Printer className="w-3.5 h-3.5" /> EXPORT PDF
                 </button>
@@ -296,7 +299,7 @@ export default function Dashboard() {
             </div>
 
             {/* Row 1: Core Dashboard Gauges & Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 print-card">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print-card">
               <PrivacyScoreDial
                 score={score}
                 localIPsExposed={localIPs.length > 0}
@@ -304,30 +307,37 @@ export default function Dashboard() {
                 dnsTested={dnsTested}
                 adblockerActive={adBlockerActive}
                 onExplainClick={handleOpenEducation}
+                status={auditComplete ? "completed" : "scanning"}
               />
 
               {/* Severity counts ledger */}
-              <div className="glass-panel rounded-3xl p-6 flex flex-col justify-between print-card relative overflow-hidden">
+              <div className="glass-panel rounded-3xl p-6 flex flex-col justify-between print-card relative overflow-hidden min-h-[260px]">
                 <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none" />
                 <div>
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Threat Severity Ledger</span>
                   <div className="grid grid-cols-3 gap-3 mt-4 font-mono">
                     <div className="bg-neon-rose/5 border border-neon-rose/10 p-3 rounded-2xl flex flex-col justify-between h-22">
                       <span className="text-[9px] text-neon-rose font-bold uppercase">High Risk</span>
-                      <div className="text-2xl font-extrabold text-neon-rose drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">{riskFindings.filter(r => r.type === "high").length}</div>
+                      <div className="text-2xl font-extrabold text-neon-rose drop-shadow-[0_0_10px_rgba(244,63,94,0.25)]">
+                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "high").length : "-"}
+                      </div>
                     </div>
                     <div className="bg-neon-amber/5 border border-neon-amber/10 p-3 rounded-2xl flex flex-col justify-between h-22">
                       <span className="text-[9px] text-neon-amber font-bold uppercase">Med Risk</span>
-                      <div className="text-2xl font-extrabold text-neon-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">{riskFindings.filter(r => r.type === "medium").length}</div>
+                      <div className="text-2xl font-extrabold text-neon-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "medium").length : "-"}
+                      </div>
                     </div>
                     <div className="bg-neon-cyan/5 border border-neon-cyan/10 p-3 rounded-2xl flex flex-col justify-between h-22">
                       <span className="text-[9px] text-neon-cyan font-bold uppercase">Low Risk</span>
-                      <div className="text-2xl font-extrabold text-neon-cyan drop-shadow-[0_0_10px_rgba(0,242,255,0.3)]">{riskFindings.filter(r => r.type === "low").length}</div>
+                      <div className="text-2xl font-extrabold text-neon-cyan drop-shadow-[0_0_10px_rgba(6,182,212,0.25)]">
+                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "low").length : "-"}
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div className="text-[11px] font-mono text-zinc-500 mt-4 border-t border-zinc-900/60 pt-4 flex justify-between items-center relative z-10">
-                  <span>Mitigation Grade: <strong className={riskFindings.filter(r => r.type === "high").length === 0 ? "text-neon-emerald" : "text-neon-amber"}>{riskFindings.filter(r => r.type === "high").length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED"}</strong></span>
+                  <span>Mitigation Grade: <strong className={!auditComplete ? "text-zinc-500 animate-pulse font-bold" : (riskFindings.filter(r => r.type === "high").length === 0 ? "text-neon-emerald font-bold" : "text-neon-amber font-bold")}>{!auditComplete ? "ANALYZING..." : (riskFindings.filter(r => r.type === "high").length === 0 ? "EXCELLENT" : "IMPROVEMENTS REQUIRED")}</strong></span>
                 </div>
               </div>
 
@@ -347,38 +357,52 @@ export default function Dashboard() {
             </div>
 
             {/* Row 2: Diagnostics Ledger & Location Map */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-card">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print-card">
               <div className="lg:col-span-2">
-                <RiskFindingsCard findings={riskFindings} />
+                <RiskFindingsCard findings={riskFindings} status={auditComplete ? "completed" : "scanning"} />
               </div>
 
               {/* Geocoding Map */}
-              <div className="glass-panel border border-zinc-900 rounded-3xl p-4 shadow-sm space-y-4 print-card flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2 py-1">
+              <div className="glass-panel border border-zinc-900 rounded-3xl p-5 shadow-sm space-y-4 print-card flex flex-col justify-between min-h-[350px]">
+                <div className="space-y-4 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between px-1 py-0.5">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-neon-cyan" />
                       <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Geolocation Target Map</h3>
                     </div>
                     <HelpCircle 
-                      className="w-4 h-4 text-zinc-600 hover:text-neon-cyan cursor-pointer no-print"
+                      className="w-4 h-4 text-zinc-650 hover:text-neon-cyan cursor-pointer no-print"
                       onClick={() => handleOpenEducation("location")}
                     />
                   </div>
 
-                  {mapCoords ? (
-                    <DynamicMap 
-                      lat={mapCoords.lat} 
-                      lon={mapCoords.lon} 
-                      label={mapCoords.label} 
-                    />
-                  ) : (
-                    <div className="w-full h-[220px] rounded-2xl bg-zinc-950/40 border border-zinc-900 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono">
-                      <EyeOff className="w-8 h-8 mb-2 text-zinc-700" />
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">NO COORDINATES PRESENT</span>
-                      <span className="text-[9px] mt-1 text-zinc-650 leading-relaxed">Local address or proxy shields are masking server geolocation. Try locating manually below.</span>
-                    </div>
-                  )}
+                  <div className="flex-1 min-h-[220px] relative rounded-2xl overflow-hidden border border-zinc-900/60">
+                    {activeCategoryIndex < 2 && !auditComplete ? (
+                      <div className="absolute inset-0 bg-zinc-950/40 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono animate-pulse">
+                        <div className="w-6 h-6 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin mb-3" />
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">ACQUIRING GEOLOCATION SECTOR...</span>
+                        <span className="text-[9px] mt-1 text-zinc-650">Resolving routing nodes and geographical references.</span>
+                      </div>
+                    ) : activeCategoryIndex === 2 && !auditComplete ? (
+                      <div className="absolute inset-0 bg-zinc-950/40 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono animate-pulse">
+                        <div className="w-6 h-6 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin mb-3" />
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">SCANNING GPS DATA...</span>
+                        <span className="text-[9px] mt-1 text-zinc-650">Verifying client GPS coordinates against IP subnets.</span>
+                      </div>
+                    ) : mapCoords ? (
+                      <DynamicMap 
+                        lat={mapCoords.lat} 
+                        lon={mapCoords.lon} 
+                        label={mapCoords.label} 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-zinc-950/40 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono">
+                        <EyeOff className="w-8 h-8 mb-2 text-zinc-700" />
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">NO COORDINATES PRESENT</span>
+                        <span className="text-[9px] mt-1 text-zinc-600 leading-relaxed">Local address or proxy shields are masking server geolocation. Try locating manually below.</span>
+                      </div>
+                    )}
+                  </div>
 
                   {gpsData && (
                     <div className="bg-zinc-900/40 border border-zinc-850 p-3 rounded-2xl font-mono text-[10px] space-y-1">
@@ -397,8 +421,8 @@ export default function Dashboard() {
                 <div className="flex gap-3 pt-2 no-print">
                   <button
                     onClick={handleBrowserLocate}
-                    disabled={locating}
-                    className="flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 text-neon-cyan text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm cursor-pointer"
+                    disabled={locating || !auditComplete}
+                    className={`flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${locating || !auditComplete ? 'opacity-55 cursor-not-allowed' : 'hover:bg-neon-cyan/20 cursor-pointer'}`}
                   >
                     <Compass className={`w-4 h-4 ${locating ? 'animate-spin' : ''}`} />
                     {locating ? "LOCATING..." : "REQUEST GPS"}
@@ -420,7 +444,7 @@ export default function Dashboard() {
             </div>
 
             {/* Row 3: Technical Audits Category Grid & History */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-grid">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print-grid">
               
               {/* Category cards subgrid */}
               <div className="lg:col-span-2 space-y-6 print-grid">
@@ -432,8 +456,10 @@ export default function Dashboard() {
                     icon={<Globe className="w-4 h-4 text-neon-cyan" />}
                     eduKey="ip"
                     onExplainClick={handleOpenEducation}
+                    status={getCardStatus(0)}
+                    isSecure={data ? (!data.anonymization.isTorNode && !data.proxy.hasProxyHeaders) : true}
                   >
-                    <NetworkAuditPanel data={data} isAdvancedMode={isAdvancedMode} apiUrlUsed={apiUrlUsed} />
+                    <NetworkAuditPanel data={data} isAdvancedMode={isAdvancedMode} apiUrlUsed={apiUrlUsed} status={getCardStatus(0)} />
                   </AuditCategoryCard>
 
                   {/* Category 2: Device Profile Audit */}
@@ -442,8 +468,10 @@ export default function Dashboard() {
                     icon={<Cpu className="w-4 h-4 text-neon-cyan" />}
                     eduKey="browser"
                     onExplainClick={handleOpenEducation}
+                    status={getCardStatus(1)}
+                    isSecure={data ? !data.securityAudit.userAgentMismatch : true}
                   >
-                    <DeviceAuditPanel data={data} isAdvancedMode={isAdvancedMode} />
+                    <DeviceAuditPanel data={data} isAdvancedMode={isAdvancedMode} status={getCardStatus(1)} />
                   </AuditCategoryCard>
 
                   {/* Category 4: Browser Fingerprint Audit */}
@@ -453,6 +481,8 @@ export default function Dashboard() {
                     eduKey="canvas"
                     onExplainClick={handleOpenEducation}
                     paddingStyle="p-0"
+                    status={getCardStatus(3)}
+                    isSecure={canvasHash !== "detecting..." && canvasHash !== "blocked" && canvasHash !== "not-supported" ? false : true}
                   >
                     <FingerprintAuditPanel
                       canvasHash={canvasHash}
@@ -461,6 +491,7 @@ export default function Dashboard() {
                       canvasUniqueness={canvasUniqueness}
                       audioUniqueness={audioUniqueness}
                       isAdvancedMode={isAdvancedMode}
+                      status={getCardStatus(3)}
                     />
                   </AuditCategoryCard>
 
@@ -471,12 +502,15 @@ export default function Dashboard() {
                     eduKey="webrtc"
                     onExplainClick={handleOpenEducation}
                     paddingStyle="p-0"
+                    status={getDnsWebRtcStatus()}
+                    isSecure={localIPs.length === 0 && (dnsTested ? dnsLeakResolvers.length === 0 : true)}
                   >
                     <WebRTCDNSPanel
                       localIPs={localIPs}
                       dnsTested={dnsTested}
                       dnsLeakResolvers={dnsLeakResolvers}
                       isAdvancedMode={isAdvancedMode}
+                      status={getDnsWebRtcStatus()}
                     />
                   </AuditCategoryCard>
 
@@ -486,8 +520,10 @@ export default function Dashboard() {
                     icon={<Terminal className="w-4 h-4 text-neon-cyan" />}
                     eduKey="capabilities"
                     onExplainClick={handleOpenEducation}
+                    status={getCardStatus(6)}
+                    isSecure={true}
                   >
-                    <CapabilitiesPanel capabilities={capabilities} />
+                    <CapabilitiesPanel capabilities={capabilities} status={getCardStatus(6)} />
                   </AuditCategoryCard>
 
                   {/* Category 8: Security Configurations */}
@@ -496,15 +532,17 @@ export default function Dashboard() {
                     icon={<Lock className="w-4 h-4 text-neon-cyan" />}
                     eduKey="security"
                     onExplainClick={handleOpenEducation}
+                    status={getCardStatus(7)}
+                    isSecure={securityConfig ? (securityConfig.isHttps && securityConfig.referrer === "None") : true}
                   >
-                    <SecurityPanel securityConfig={securityConfig} />
+                    <SecurityPanel securityConfig={securityConfig} status={getCardStatus(7)} />
                   </AuditCategoryCard>
 
                 </div>
               </div>
 
               {/* Column 3: History Trends & Stats */}
-              <div className="space-y-8 print-card no-print">
+              <div className="space-y-6 print-card no-print">
                 
                 {/* Local History trends */}
                 <div className="glass-panel rounded-3xl p-6 shadow-sm space-y-5">
@@ -516,7 +554,7 @@ export default function Dashboard() {
                       <div key={index} className="flex justify-between items-center border-b border-zinc-900/60 pb-2">
                         <div className="space-y-1">
                           <span className="text-[10px] text-zinc-500 block">{item.timestamp}</span>
-                          <span className="text-zinc-400 tracking-wide truncate max-w-[150px] inline-block">{item.ip}</span>
+                          <span className="text-zinc-400 tracking-wide truncate max-w-[150px] inline-block font-semibold">{item.ip}</span>
                         </div>
                         <div className="flex items-center gap-2.5">
                           <span className="text-neon-cyan font-bold bg-neon-cyan/5 border border-neon-cyan/20 px-2 py-0.5 rounded-lg">
@@ -527,7 +565,7 @@ export default function Dashboard() {
                       </div>
                     ))}
                     {localHistory.length === 0 && (
-                      <div className="text-center py-6 text-zinc-650 text-[10px] uppercase tracking-wider">
+                      <div className="text-center py-6 text-zinc-600 text-[10px] uppercase tracking-wider">
                         No previous records found
                       </div>
                     )}
@@ -541,20 +579,20 @@ export default function Dashboard() {
                   </h3>
                   <div className="space-y-3 font-mono text-[10px] text-zinc-400">
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">API Gateway URL:</span>
-                      <span className="text-zinc-300 truncate max-w-[140px]" title={apiUrlUsed}>{apiUrlUsed}</span>
+                      <span className="text-zinc-500 font-medium">API Gateway URL:</span>
+                      <span className="text-zinc-300 truncate max-w-[140px] font-semibold" title={apiUrlUsed}>{apiUrlUsed}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Total Scanned:</span>
+                      <span className="text-zinc-500 font-medium">Total Scanned:</span>
                       <span className="text-zinc-300 font-bold">{totalChecked ?? "Connecting..."} users</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Local Cache:</span>
+                      <span className="text-zinc-500 font-medium">Local Cache:</span>
                       <span className="text-neon-emerald font-semibold">Active Filesystem</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Status Check:</span>
-                      <span className="text-neon-cyan animate-pulse">Ready</span>
+                      <span className="text-zinc-500 font-medium">Status Check:</span>
+                      <span className="text-neon-cyan animate-pulse font-semibold">Ready</span>
                     </div>
                   </div>
                 </div>
@@ -565,12 +603,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Diagnostic logs slider terminal when audit complete */}
-        {auditStarted && auditComplete && (
+        {/* Diagnostic logs slider terminal (Always visible at the bottom during scan/complete) */}
+        {auditStarted && (
           <ScannerConsole
             logs={scanLogs}
-            progress={100}
-            isScanning={false}
+            progress={Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}
+            isScanning={!auditComplete}
             collapsed={terminalCollapsed}
             onToggleCollapse={() => setTerminalCollapsed(!terminalCollapsed)}
           />
@@ -585,7 +623,7 @@ export default function Dashboard() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900/80 bg-zinc-950 py-6 text-center text-[10px] text-zinc-600 font-mono mt-auto relative z-30 tracking-widest uppercase no-print">
+      <footer className="border-t border-zinc-900/80 bg-zinc-950 py-6 text-center text-[10px] text-zinc-650 font-mono mt-auto relative z-30 tracking-widest uppercase no-print">
         <div>
           WhoAmI.Audit &middot; PRIVACY DIAGNOSTICS &middot; &copy; 2026
         </div>

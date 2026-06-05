@@ -5,7 +5,9 @@ import pino from 'pino';
 const logger = pino({ level: ENV.LOG_LEVEL });
 
 export const pool = new Pool({
-  connectionString: ENV.DATABASE_URL
+  connectionString: ENV.DATABASE_URL,
+  connectionTimeoutMillis: 3000,
+  idleTimeoutMillis: 10000,
 });
 
 export let dbInitPromise: Promise<void> | null = null;

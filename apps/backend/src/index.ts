@@ -55,6 +55,14 @@ app.use(express.json());
 app.use(cors({ origin: ENV.ALLOWED_ORIGIN }));
 app.use(requestIp.mw());
 
+// Rewrite request URL to remove /_/backend prefix if present (Vercel experimentalServices routing)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.url.startsWith('/_/backend')) {
+    req.url = req.url.replace('/_/backend', '');
+  }
+  next();
+});
+
 // Rate Limiting middleware for API endpoints
 app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 

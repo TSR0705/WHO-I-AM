@@ -1,16 +1,4 @@
 services:
-  db:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: whoami_user
-      POSTGRES_PASSWORD: whoami_password
-      POSTGRES_DB: whoami_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg-data:/var/lib/postgresql/data
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -29,9 +17,8 @@ services:
       NODE_ENV: production
       PORT: 3000
       REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgresql://whoami_user:whoami_password@db:5432/whoami_db
+      # DATABASE_URL will be picked up from the .env file automatically
     depends_on:
-      - db
       - redis
     restart: unless-stopped
 
@@ -50,5 +37,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pg-data:
   redis-data:

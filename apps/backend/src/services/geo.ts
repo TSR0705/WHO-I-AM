@@ -1,52 +1,76 @@
-// @ts-ignore
-import geoip from 'geoip-lite';
+import maxmind, { Reader } from 'maxmind';
+import path from 'path';
+import fs from 'fs';
 import pino from 'pino';
 import { ENV } from '../config/env';
 
 const logger = pino({ level: ENV.LOG_LEVEL });
-const geoCache = new Map<string, any>();
+let reader: Reader<any> | null = null;
 
-async function fetchWithTimeout(url: string, opts: any = {}, ms = 3000) {
-  const ac = new AbortController();
-  const id = setTimeout(() => ac.abort(), ms);
-  try {
-    const r = await fetch(url, { ...opts, signal: ac.signal });
-    clearTimeout(id);
-    return r;
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
+function findDbPath(): string {
+  const candidates = [
+    // 1. Process relative (local dev running from apps/backend, or Vercel execution root)
+    path.join(process.cwd(), 'src/data/GeoLite2-City.mmdb'),
+    path.join(process.cwd(), 'dist/data/GeoLite2-City.mmdb'),
+    
+    // 2. Monorepo root relative (dev/local running from monorepo root)
+    path.join(process.cwd(), 'apps/backend/src/data/GeoLite2-City.mmdb'),
+    path.join(process.cwd(), 'apps/backend/dist/data/GeoLite2-City.mmdb'),
+    
+    // 3. Module relative (compiled JS in dist/services/geo.js looking at dist/data/)
+    path.join(__dirname, '../data/GeoLite2-City.mmdb'),
+    // Module relative (compiled JS in dist/services/geo.js looking at src/data/)
+    path.join(__dirname, '../../src/data/GeoLite2-City.mmdb'),
+    
+    // 4. Module relative (source TS in src/services/geo.ts looking at src/data/)
+    path.join(__dirname, '../data/GeoLite2-City.mmdb')
+  ];
+
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
   }
+
+  // Fallback default
+  return path.join(__dirname, '../data/GeoLite2-City.mmdb');
 }
 
-async function getExternalGeo(ipAddress: string) {
-  if (!ENV.GEO_PROVIDER || !ENV.GEO_API_KEY) return null;
-  const key = `${ENV.GEO_PROVIDER}:${ipAddress}`;
-  const cached = geoCache.get(key);
-  if (cached && (Date.now() - cached.ts) < ENV.GEO_CACHE_TTL_MS) return cached.value;
+function isLoopback(ip: string): boolean {
+  if (ip.startsWith('127.')) return true;
+  if (ip === '::1' || ip === '0:0:0:0:0:0:0:1' || ip === '::ffff:127.0.0.1') return true;
+  return false;
+}
 
-  try {
-    if (ENV.GEO_PROVIDER === 'ipapi') {
-      const url = `https://ipapi.co/${ipAddress}/json/?key=${ENV.GEO_API_KEY}`;
-      const resp = await fetchWithTimeout(url, {}, 3000);
-      if (!resp.ok) throw new Error(`geo provider status ${resp.status}`);
-      const j = await resp.json() as any;
-      const val = {
-        city: j.city || '',
-        region: j.region || j.region_code || '',
-        country: j.country || j.country_name || '',
-        latitude: j.latitude || j.lat || null,
-        longitude: j.longitude || j.lon || null,
-        timezone: j.timezone || null
-      };
-      geoCache.set(key, { ts: Date.now(), value: val });
-      return val;
+function isPrivate(ip: string): boolean {
+  if (ip.startsWith('10.')) return true;
+  if (ip.startsWith('192.168.')) return true;
+  if (ip.startsWith('169.254.')) return true;
+  if (ip.startsWith('172.')) {
+    const parts = ip.split('.');
+    if (parts.length >= 2) {
+      const secondOctet = parseInt(parts[1], 10);
+      if (secondOctet >= 16 && secondOctet <= 31) {
+        return true;
+      }
     }
-  } catch (e) {
-    logger.warn({ err: e }, 'External geo lookup failed');
-    return null;
   }
-  return null;
+  const normalized = ip.toLowerCase();
+  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+  if (normalized.startsWith('fe8') || normalized.startsWith('fe9') || normalized.startsWith('fea') || normalized.startsWith('feb')) return true;
+  return false;
+}
+
+async function getReader(): Promise<Reader<any>> {
+  if (!reader) {
+    const dbPath = findDbPath();
+    reader = await maxmind.open<any>(dbPath);
+  }
+  return reader;
+}
+
+export function reloadGeoReader(): void {
+  reader = null;
 }
 
 export interface GeolocationResult {
@@ -59,28 +83,38 @@ export interface GeolocationResult {
 }
 
 export async function resolveGeolocation(ipAddress: string): Promise<GeolocationResult> {
-  let location = { city: '', region: '', country: '', latitude: null as number | null, longitude: null as number | null, timezone: 'UTC' };
+  const location: GeolocationResult = {
+    city: '',
+    region: '',
+    country: '',
+    latitude: null,
+    longitude: null,
+    timezone: 'UTC'
+  };
 
-  try {
-    const privateIpRegex = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])|::1$|::ffff:127\.)/;
-    if (!privateIpRegex.test(ipAddress) && ENV.GEO_PROVIDER && ENV.GEO_API_KEY) {
-      const ext = await getExternalGeo(ipAddress);
-      if (ext) {
-        location = { ...location, ...ext };
-      }
-    }
-  } catch (e) {
-    logger.warn({ err: e }, 'External geo lookup failed, falling back to geoip-lite');
+  if (!ipAddress) {
+    return location;
   }
 
-  if (!location.latitude || !location.longitude) {
-    const geo = geoip.lookup(ipAddress) || {};
-    location.city = location.city || geo.city || '';
-    location.region = location.region || geo.region || '';
-    location.country = location.country || geo.country || '';
-    location.latitude = location.latitude || (geo.ll ? geo.ll[0] : null);
-    location.longitude = location.longitude || (geo.ll ? geo.ll[1] : null);
-    location.timezone = location.timezone || geo.timezone || 'UTC';
+  const cleanIp = ipAddress.trim().replace(/^::ffff:/, '');
+
+  if (isLoopback(cleanIp) || isPrivate(cleanIp)) {
+    return location;
+  }
+
+  try {
+    const db = await getReader();
+    const lookupResult = db.get(cleanIp);
+    if (lookupResult) {
+      location.city = lookupResult.city?.names?.en || '';
+      location.region = lookupResult.subdivisions?.[0]?.names?.en || lookupResult.subdivisions?.[0]?.iso_code || '';
+      location.country = lookupResult.country?.iso_code || lookupResult.registered_country?.iso_code || lookupResult.represented_country?.iso_code || '';
+      location.latitude = lookupResult.location?.latitude ?? null;
+      location.longitude = lookupResult.location?.longitude ?? null;
+      location.timezone = lookupResult.location?.time_zone || 'UTC';
+    }
+  } catch (err) {
+    logger.warn({ err, ip: cleanIp }, 'GeoLite2 City lookup failed');
   }
 
   return location;

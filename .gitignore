@@ -13,3 +13,4 @@ apps/backend/src/data/
 apps/frontend/.next/
 .next/
 out/
+scratch/

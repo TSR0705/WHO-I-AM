@@ -25,6 +25,7 @@ Unlike traditional services, WHO-I-AM runs a **hybrid local/cloud intelligence p
 ## 📖 Table of Contents
 
 - [✨ Core Features](#-core-features)
+- [🛠️ Technical Highlights (Why I Built This)](#️-technical-highlights-why-i-built-this)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🚀 Quick Start](#-quick-start)
 - [📚 Documentation Hub](#-documentation-hub)
@@ -43,6 +44,17 @@ WHO-I-AM implements bleeding-edge privacy diagnostic capabilities entirely in-ho
 * **🧩 Advanced Fingerprinting:** Generates device hashes via Canvas, WebGL, and Audio contexts, comparing them against a central PostgreSQL database to measure browser uniqueness ratios. Note: Identical hardware/software setups may yield identical hashes.
 * **🛡️ DNS Leak Diagnostic:** Deploys a custom UDP DNS server that catches dynamic subdomain lookups to check if system requests route outside secure VPN tunnels.
 * **🕸️ WebRTC LAN Exposure:** Identifies private local IP leakage (RFC 1918) through browser STUN negotiations.
+
+---
+
+## 🛠️ Technical Highlights (Why I Built This)
+
+This project was engineered to demonstrate deep, full-stack understanding of network protocols, backend optimization, and systems architecture. Key technical achievements include:
+
+- **$O(\log N)$ Binary Search IP Lookups**: Cloud provider IPv4 and IPv6 subnets are merged and queried using highly optimized binary searches, rather than slow sequential scans or expensive database queries.
+- **Bypassing Serverless Size Constraints**: MaxMind GeoIP databases (~70MB) exceed Vercel's 50MB function limits. This is solved via a custom build-time script that Brotli-compresses the data down to ~39MB, decompressing it into RAM at startup via Node's native `zlib`.
+- **Low-Level Socket Engineering**: Implements a custom raw UDP DNS server (`dgram`) mapped to dynamic subdomains to catch and evaluate DNS tunnel leaks outside of standard HTTP flows.
+- **Graceful Fallbacks & Resilience**: The architecture seamlessly pivots from a primary PostgreSQL/Redis stack to a local `JSON` + in-memory Map fallback if environment variables are absent, preventing fatal crashes.
 
 ---
 

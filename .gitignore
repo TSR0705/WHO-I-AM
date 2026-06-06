@@ -9,6 +9,7 @@ dist/
 .cache/
 visits.json
 apps/backend/dist/
+apps/backend/src/data/
 apps/frontend/.next/
 .next/
 out/

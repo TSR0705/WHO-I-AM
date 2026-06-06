@@ -124,6 +124,11 @@ async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<Response
 }
 
 async function main() {
+  const force = process.argv.includes('--force');
+  if (fs.existsSync(OUT_FILE) && !force) {
+    console.log(`Infrastructure database ${path.basename(OUT_FILE)} already exists. Skipping compilation (use --force to overwrite).`);
+    process.exit(0);
+  }
   console.log('Compiling Infrastructure Ranges...');
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });

@@ -38,8 +38,13 @@ async function downloadFile(url, destPath) {
 }
 
 async function run() {
+  const force = process.argv.includes('--force');
   for (const db of DATABASES) {
     const destPath = path.join(DB_DIR, db.name);
+    if (fs.existsSync(destPath) && !force) {
+      console.log(`Database ${db.name} already exists. Skipping download (use --force to overwrite).`);
+      continue;
+    }
     console.log(`Downloading ${db.name}...`);
     try {
       await downloadFile(db.url, destPath);

@@ -4,11 +4,16 @@ import pino from 'pino';
 
 const logger = pino({ level: ENV.LOG_LEVEL });
 
-export const pool = new Pool({
+const poolConfig = {
   connectionString: ENV.DATABASE_URL,
   connectionTimeoutMillis: 3000,
   idleTimeoutMillis: 10000,
-});
+  ssl: ENV.DATABASE_URL && !ENV.DATABASE_URL.includes('localhost') && !ENV.DATABASE_URL.includes('127.0.0.1') ? {
+    rejectUnauthorized: false
+  } : undefined
+};
+
+export const pool = new Pool(poolConfig);
 
 export let dbInitPromise: Promise<void> | null = null;
 

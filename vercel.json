@@ -10,9 +10,7 @@
             "routePrefix": "/api",
             "entrypoint": "src/index.ts",
             "builder": "@vercel/node",
-            "config": {
-                "includeFiles": ["src/data/GeoLite2-ASN.mmdb.br", "src/data/GeoLite2-City.mmdb.br", "src/data/infra-ranges.json", "src/data/tor-exit-nodes.json"]
-            }
+            "includeFiles": ["src/data/GeoLite2-ASN.mmdb.br", "src/data/GeoLite2-City.mmdb.br", "src/data/infra-ranges.json", "src/data/tor-exit-nodes.json"]
         }
     }
 }

@@ -1,9 +1,16 @@
+jest.mock('../services/db', () => ({
+  pool: {
+    query: () => Promise.resolve({ rows: [{ count: '1' }] })
+  },
+  initDatabase: () => Promise.resolve(),
+  dbInitPromise: Promise.resolve()
+}));
+
 import request from 'supertest';
 import app from '../index';
 import fs from 'fs';
 import path from 'path';
 
-// Clean up any test visits file created during testing
 const visitsFile = path.join(__dirname, '..', 'visits.json');
 
 describe('WhoAmI API Integration Tests', () => {
@@ -85,6 +92,8 @@ describe('WhoAmI API Integration Tests', () => {
       expect(response.body.simulation.active).toBe(true);
       expect(response.body.simulation.isSpoofedIp).toBe(true);
       expect(response.body.simulation.isSpoofedUserAgent).toBe(true);
+      expect(response.body.network.asn).toBe('AS15169');
+      expect(response.body.network.isp).toContain('Google');
     });
 
     it('should detect User-Agent and client OS platform mismatch', async () => {

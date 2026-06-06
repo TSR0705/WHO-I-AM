@@ -2,6 +2,7 @@ import maxmind, { Reader } from 'maxmind';
 import path from 'path';
 import fs from 'fs';
 import pino from 'pino';
+import zlib from 'zlib';
 import { ENV } from '../config/env';
 
 const logger = pino({ level: ENV.LOG_LEVEL });
@@ -10,20 +11,20 @@ let reader: Reader<any> | null = null;
 function findDbPath(): string {
   const candidates = [
     // 1. Process relative (local dev running from apps/backend, or Vercel execution root)
-    path.join(process.cwd(), 'src/data/GeoLite2-City.mmdb'),
-    path.join(process.cwd(), 'dist/data/GeoLite2-City.mmdb'),
+    path.join(process.cwd(), 'src/data/GeoLite2-City.mmdb.br'),
+    path.join(process.cwd(), 'dist/data/GeoLite2-City.mmdb.br'),
     
     // 2. Monorepo root relative (dev/local running from monorepo root)
-    path.join(process.cwd(), 'apps/backend/src/data/GeoLite2-City.mmdb'),
-    path.join(process.cwd(), 'apps/backend/dist/data/GeoLite2-City.mmdb'),
+    path.join(process.cwd(), 'apps/backend/src/data/GeoLite2-City.mmdb.br'),
+    path.join(process.cwd(), 'apps/backend/dist/data/GeoLite2-City.mmdb.br'),
     
     // 3. Module relative (compiled JS in dist/services/geo.js looking at dist/data/)
-    path.join(__dirname, '../data/GeoLite2-City.mmdb'),
+    path.join(__dirname, '../data/GeoLite2-City.mmdb.br'),
     // Module relative (compiled JS in dist/services/geo.js looking at src/data/)
-    path.join(__dirname, '../../src/data/GeoLite2-City.mmdb'),
+    path.join(__dirname, '../../src/data/GeoLite2-City.mmdb.br'),
     
     // 4. Module relative (source TS in src/services/geo.ts looking at src/data/)
-    path.join(__dirname, '../data/GeoLite2-City.mmdb')
+    path.join(__dirname, '../data/GeoLite2-City.mmdb.br')
   ];
 
   for (const p of candidates) {
@@ -33,7 +34,7 @@ function findDbPath(): string {
   }
 
   // Fallback default
-  return path.join(__dirname, '../data/GeoLite2-City.mmdb');
+  return path.join(__dirname, '../data/GeoLite2-City.mmdb.br');
 }
 
 function isLoopback(ip: string): boolean {
@@ -64,9 +65,11 @@ function isPrivate(ip: string): boolean {
 async function getReader(): Promise<Reader<any>> {
   if (!reader) {
     const dbPath = findDbPath();
-    reader = await maxmind.open<any>(dbPath);
+    const compressed = fs.readFileSync(dbPath);
+    const decompressed = zlib.brotliDecompressSync(compressed);
+    reader = new Reader<any>(decompressed);
   }
-  return reader;
+  return reader!;
 }
 
 export function reloadGeoReader(): void {

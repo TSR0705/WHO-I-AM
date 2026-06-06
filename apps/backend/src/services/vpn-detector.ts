@@ -1,42 +1,4 @@
-// Using global fetch available in Node 20
-
-// Curated static subnets for major cloud providers (AWS, GCP, DigitalOcean, Azure)
-// to identify hosting/VPN gateways offline
-const HOSTING_SUBNETS = [
-  // AWS examples
-  '3.5.0.0/16', '3.8.0.0/15', '13.32.0.0/15', '13.34.0.0/16', '15.177.0.0/16', '18.208.0.0/13', '34.192.0.0/12', '52.0.0.0/10', '54.0.0.0/8',
-  // Google Cloud examples
-  '34.80.0.0/12', '35.184.0.0/13', '35.192.0.0/11', '104.154.0.0/15', '104.196.0.0/14', '130.211.0.0/16',
-  // DigitalOcean examples
-  '104.131.0.0/16', '104.248.0.0/16', '138.197.0.0/16', '138.68.0.0/16', '142.93.0.0/16', '159.203.0.0/16', '159.65.0.0/16', '165.22.0.0/16', '167.99.0.0/16', '178.62.0.0/16', '206.189.0.0/16', '46.101.0.0/16',
-  // Azure examples
-  '13.64.0.0/11', '20.33.0.0/16', '23.96.0.0/13', '40.64.0.0/10', '52.136.0.0/13', '104.40.0.0/13'
-];
-
-// Helper to convert IPv4 string to integer
-function ipToInt(ip: string): number | null {
-  const parts = ip.split('.');
-  if (parts.length !== 4) return null;
-  return parts.reduce((ipInt, octet) => {
-    const val = parseInt(octet, 10);
-    if (isNaN(val) || val < 0 || val > 255) return NaN;
-    return (ipInt << 8) + val;
-  }, 0) >>> 0;
-}
-
-// Helper to verify if an IP is in a CIDR subnet range
-function isIpInCidr(ip: string, cidr: string): boolean {
-  const [range, bitsStr = '32'] = cidr.split('/');
-  const bits = parseInt(bitsStr, 10);
-  
-  const ipInt = ipToInt(ip);
-  const rangeInt = ipToInt(range);
-  
-  if (ipInt === null || rangeInt === null || isNaN(ipInt) || isNaN(rangeInt)) return false;
-  
-  const mask = bits === 0 ? 0 : (~(2 ** (32 - bits) - 1)) >>> 0;
-  return (ipInt & mask) === (rangeInt & mask);
-}
+import { InfrastructureLookupService } from './infrastructure';
 
 export class VpnDetector {
   private torExitNodes: Set<string> = new Set();
@@ -60,7 +22,6 @@ export class VpnDetector {
     if (this.isUpdating) return;
     this.isUpdating = true;
     try {
-      // Fetch with timeout
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
       
@@ -91,29 +52,34 @@ export class VpnDetector {
     return this.torExitNodes.has(ip);
   }
 
-  // Check Hosting subnets status
-  public getHostingProvider(ip: string): string | null {
+  // Check Hosting/VPN status using compiled range list and ASN Org fallback
+  public getHostingProvider(ip: string, asnOrganization?: string): string | null {
     if (ip === '127.0.0.1' || ip === '::1') return null;
 
-    // Check against AWS CIDRs
-    for (const cidr of HOSTING_SUBNETS) {
-      if (isIpInCidr(ip, cidr)) {
-        if (cidr.startsWith('3.') || cidr.startsWith('13.') || cidr.startsWith('15.') || cidr.startsWith('18.') || cidr.startsWith('34.') || cidr.startsWith('52.') || cidr.startsWith('54.')) {
-          // Simplistic mapping for static array demo
-          if (cidr.startsWith('104.131.') || cidr.startsWith('138.197.') || cidr.startsWith('159.203.') || cidr.startsWith('165.22.')) {
-            return 'DigitalOcean';
-          }
-          if (cidr.startsWith('34.80.') || cidr.startsWith('35.184.') || cidr.startsWith('104.154.') || cidr.startsWith('130.211.')) {
-            return 'Google Cloud (GCP)';
-          }
-          return 'Amazon Web Services (AWS)';
+    // 1. Check compiled cloud provider ranges (AWS, Google Cloud, Cloudflare)
+    const infraProvider = InfrastructureLookupService.lookup(ip);
+    if (infraProvider) {
+      return infraProvider;
+    }
+
+    // 2. Check ASN Organization fallback (Hetzner, OVH, Vultr, Linode, DigitalOcean, etc.)
+    if (asnOrganization && asnOrganization !== 'Unknown ISP / Network' && asnOrganization !== 'Unknown') {
+      const org = asnOrganization.toLowerCase();
+      const keywords = [
+        'ovh', 'hetzner', 'linode', 'vultr', 'leaseweb', 'contabo', 'scaleway',
+        'liquid web', 'hivelocity', 'equinix', 'cogent', 'fastly', 'akamai',
+        'webnx', 'ovhcloud', 'digitalocean', 'hosting', 'vps', 'colocation',
+        'data center', 'datacenter', 'vps', 'cloud provider', 'cloud services',
+        'infrastructure', 'dedicated server', 'servertech'
+      ];
+
+      for (const kw of keywords) {
+        if (org.includes(kw)) {
+          return asnOrganization;
         }
-        if (cidr.startsWith('13.64.') || cidr.startsWith('20.33.') || cidr.startsWith('40.64.')) {
-          return 'Microsoft Azure';
-        }
-        return 'Cloud Provider (Hosting/VPN)';
       }
     }
+
     return null;
   }
 }

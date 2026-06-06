@@ -4,7 +4,7 @@
   "description": "TypeScript Express backend for WhoAmI",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/download-db.js && npx ts-node-dev --transpile-only scripts/compile-infra.ts && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest --runInBand"
@@ -17,6 +17,7 @@
     "geoip-lite": "^1.4.2",
     "helmet": "^7.0.0",
     "ioredis": "^5.3.2",
+    "maxmind": "^5.0.6",
     "pg": "^8.11.3",
     "pino": "^8.16.0",
     "prom-client": "^14.0.0",

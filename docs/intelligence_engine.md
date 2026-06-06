@@ -75,7 +75,7 @@ Resolves physical locations (Country, Region, City, Timezone, and Coordinates) l
 
 ### Audio Fingerprinting
 * **Method**: Synthesizes a high-frequency triangle wave oscillator via the Web Audio API and routes it through an analyser node. The raw frequency bin arrays are compiled and hashed.
-* **Why it works**: Floating-point calculation differences in the browser's audio processing engine, OS audio drivers, and CPU architecture produce unique digital outputs.
+* **Why it works**: Floating-point calculation differences in the browser's audio processing engine, OS audio drivers, and CPU architecture produce highly distinct digital outputs. Note that identical software/hardware environments may produce the same outputs.
 
 ### WebGL Fingerprinting
 * **Method**: Renders WebGL vertices and queries the `WEBGL_debug_renderer_info` extension for `UNMASKED_VENDOR_WEBGL` and `UNMASKED_RENDERER_WEBGL`.

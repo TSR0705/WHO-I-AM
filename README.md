@@ -18,7 +18,7 @@
 
 **WHO-I-AM** is an advanced privacy diagnostics platform designed to analyze client network routing, browser properties, and hardware fingerprints to expose what metadata is leaked to web servers. 
 
-Unlike traditional services, WHO-I-AM runs a **completely offline local intelligence pipeline**, executing zero-latency database checks in-memory without sending user data to third-party APIs.
+Unlike traditional services, WHO-I-AM runs a **hybrid local/cloud intelligence pipeline**, executing zero-latency GeoIP and Anonymization database checks locally in-memory, while offloading uniqueness calculations and DNS leak diagnostics to external services.
 
 ---
 
@@ -40,8 +40,8 @@ WHO-I-AM implements bleeding-edge privacy diagnostic capabilities entirely in-ho
 * **🌍 Local ASN & Geolocation Engines:** In-memory lookups of country, region, city, coordinates, and ISP using Brotli-compressed MaxMind databases.
 * **☁️ Infrastructure Identification:** Identifies AWS, Google Cloud, and Cloudflare subnets via fast binary search ($O(\log N)$) across IPv4 and IPv6 space.
 * **🧅 Offline Tor Detection:** Evaluates client IPs against dynamically pre-compiled exit node datasets.
-* **🧩 Advanced Fingerprinting:** Generates cryptographic device signatures via Canvas, WebGL, and Audio contexts to measure browser uniqueness ratios.
-* **🛡️ DNS Leak Diagnostic:** Deploys a custom UDP DNS server that checks if system lookup paths route outside secure VPN tunnels.
+* **🧩 Advanced Fingerprinting:** Generates device hashes via Canvas, WebGL, and Audio contexts, comparing them against a central PostgreSQL database to measure browser uniqueness ratios. Note: Identical hardware/software setups may yield identical hashes.
+* **🛡️ DNS Leak Diagnostic:** Deploys a custom UDP DNS server that catches dynamic subdomain lookups to check if system requests route outside secure VPN tunnels.
 * **🕸️ WebRTC LAN Exposure:** Identifies private local IP leakage (RFC 1918) through browser STUN negotiations.
 
 ---

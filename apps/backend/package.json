@@ -4,7 +4,7 @@
   "description": "TypeScript Express backend for WhoAmI",
   "main": "dist/index.js",
   "scripts": {
-    "build": "node scripts/download-db.js && npx ts-node-dev --transpile-only scripts/compile-infra.ts && tsc",
+    "build": "node scripts/download-db.js && npx ts-node-dev --transpile-only scripts/compile-infra.ts && npx ts-node-dev --transpile-only scripts/compile-tor.ts && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest --runInBand"

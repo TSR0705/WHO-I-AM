@@ -11,7 +11,7 @@
             "entrypoint": "src/index.ts",
             "builder": "@vercel/node",
             "config": {
-                "includeFiles": ["src/data/GeoLite2-ASN.mmdb", "src/data/infra-ranges.json"]
+                "includeFiles": ["src/data/GeoLite2-ASN.mmdb", "src/data/infra-ranges.json", "src/data/tor-exit-nodes.json"]
             }
         }
     }

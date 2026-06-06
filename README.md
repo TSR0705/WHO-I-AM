@@ -26,7 +26,6 @@ Unlike traditional services, WHO-I-AM runs a **completely offline local intellig
 
 - [✨ Core Features](#-core-features)
 - [🏗️ System Architecture](#️-system-architecture)
-- [📸 Screenshots](#-screenshots)
 - [🚀 Quick Start](#-quick-start)
 - [📚 Documentation Hub](#-documentation-hub)
 - [🤝 Contributing](#-contributing)
@@ -53,23 +52,6 @@ WHO-I-AM is designed as a polyglot monorepo deployed seamlessly via Vercel Servi
 
 <div align="center">
   <img src="docs/images/system_architecture.png" alt="System Architecture" width="800">
-</div>
-
----
-
-## 📸 Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><b>Landing Page Control Panel</b></td>
-      <td align="center"><b>Diagnostic Logs Console</b></td>
-    </tr>
-    <tr>
-      <td><img src="docs/images/landing_panel.png" alt="Landing Page Backdrop Control Panel" width="400"/></td>
-      <td><img src="docs/images/scanner_console.png" alt="Diagnostic Logs Terminal Console" width="400"/></td>
-    </tr>
-  </table>
 </div>
 
 ---

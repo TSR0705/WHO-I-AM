@@ -1,26 +1,27 @@
 import maxmind, { Reader } from 'maxmind';
 import path from 'path';
 import fs from 'fs';
+import zlib from 'zlib';
 
 let reader: Reader<any> | null = null;
 
 function findDbPath(): string {
   const candidates = [
     // 1. Process relative (local dev running from apps/backend, or Vercel execution root)
-    path.join(process.cwd(), 'src/data/GeoLite2-ASN.mmdb'),
-    path.join(process.cwd(), 'dist/data/GeoLite2-ASN.mmdb'),
+    path.join(process.cwd(), 'src/data/GeoLite2-ASN.mmdb.br'),
+    path.join(process.cwd(), 'dist/data/GeoLite2-ASN.mmdb.br'),
     
     // 2. Monorepo root relative (dev/local running from monorepo root)
-    path.join(process.cwd(), 'apps/backend/src/data/GeoLite2-ASN.mmdb'),
-    path.join(process.cwd(), 'apps/backend/dist/data/GeoLite2-ASN.mmdb'),
+    path.join(process.cwd(), 'apps/backend/src/data/GeoLite2-ASN.mmdb.br'),
+    path.join(process.cwd(), 'apps/backend/dist/data/GeoLite2-ASN.mmdb.br'),
     
     // 3. Module relative (compiled JS in dist/services/asn.js looking at dist/data/)
-    path.join(__dirname, '../data/GeoLite2-ASN.mmdb'),
+    path.join(__dirname, '../data/GeoLite2-ASN.mmdb.br'),
     // Module relative (compiled JS in dist/services/asn.js looking at src/data/)
-    path.join(__dirname, '../../src/data/GeoLite2-ASN.mmdb'),
+    path.join(__dirname, '../../src/data/GeoLite2-ASN.mmdb.br'),
     
     // 4. Module relative (source TS in src/services/asn.ts looking at src/data/)
-    path.join(__dirname, '../data/GeoLite2-ASN.mmdb')
+    path.join(__dirname, '../data/GeoLite2-ASN.mmdb.br')
   ];
 
   for (const p of candidates) {
@@ -30,7 +31,7 @@ function findDbPath(): string {
   }
 
   // Fallback default
-  return path.join(__dirname, '../data/GeoLite2-ASN.mmdb');
+  return path.join(__dirname, '../data/GeoLite2-ASN.mmdb.br');
 }
 
 function isLoopback(ip: string): boolean {
@@ -62,9 +63,11 @@ export class AsnLookupService {
   private static async getReader(): Promise<Reader<any>> {
     if (!reader) {
       const dbPath = findDbPath();
-      reader = await maxmind.open<any>(dbPath);
+      const compressed = fs.readFileSync(dbPath);
+      const decompressed = zlib.brotliDecompressSync(compressed);
+      reader = new Reader<any>(decompressed);
     }
-    return reader;
+    return reader!;
   }
 
   public static async lookup(ipAddress: string): Promise<{ asn: string; organization: string }> {

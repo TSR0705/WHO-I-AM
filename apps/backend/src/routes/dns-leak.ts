@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
-// @ts-ignore
-import geoip from 'geoip-lite';
+import { resolveGeolocation } from '../services/geo';
 import { dnsCache } from '../services/dns';
 import { visitsService } from '../services/visits';
 import { ENV } from '../config/env';
@@ -33,15 +32,15 @@ router.get('/dns-leak/check', async (req: Request, res: Response) => {
     resolvers = dnsCache.get(token) || [];
   }
 
-  const resolvedResolvers = resolvers.map(ip => {
-    const geo = geoip.lookup(ip) || {};
+  const resolvedResolvers = await Promise.all(resolvers.map(async (ip) => {
+    const geo = await resolveGeolocation(ip);
     return {
       ip,
       country: geo.country || 'Unknown',
       region: geo.region || 'Unknown',
       city: geo.city || 'Unknown'
     };
-  });
+  }));
 
   return res.json({
     token,

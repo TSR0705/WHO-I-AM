@@ -1,17 +1,15 @@
 const { Pool } = require('pg');
 
 const candidates = [
-  'postgresql://postgres:[REDACTED_PASSWORD_LOCAL_1]@localhost:5432/postgres',
-  'postgresql://postgres:[REDACTED_PASSWORD_LOCAL_2]@localhost:5432/postgres',
+  process.env.DATABASE_URL,
   'postgresql://postgres:postgres@localhost:5432/postgres',
   'postgresql://postgres:password@localhost:5432/postgres',
   'postgresql://postgres:admin@localhost:5432/postgres',
   'postgresql://postgres:root@localhost:5432/postgres',
   'postgresql://postgres:@localhost:5432/postgres',
-  'postgresql://whoami_user:whoami_password@localhost:5432/whoami_db',
   'postgresql://postgres:postgres@localhost:5432/whoami_db',
   'postgresql://postgres:postgres@localhost:5432/whoami',
-];
+].filter(Boolean);
 
 async function probe() {
   for (const uri of candidates) {

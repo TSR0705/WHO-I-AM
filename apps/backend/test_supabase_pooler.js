@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 
 const client = new Client({
-  connectionString: 'postgresql://postgres.redacted:[REDACTED_PASSWORD]@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres',
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/postgres',
   connectionTimeoutMillis: 5000,
 });
 

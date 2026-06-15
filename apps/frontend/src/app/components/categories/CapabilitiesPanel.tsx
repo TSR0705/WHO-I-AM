@@ -29,31 +29,31 @@ export default function CapabilitiesPanel({
       <div className="space-y-3.5">
         <div className="flex justify-between border-b border-zinc-900/60 pb-2">
           <span className="text-zinc-400">Cookies Enabled:</span>
-          <span className={capabilities.cookiesEnabled ? "text-neon-cyan font-bold" : "text-neon-rose font-bold"}>
+          <span className={capabilities.cookiesEnabled ? "text-primary font-bold" : "text-neon-rose font-bold"}>
             {capabilities.cookiesEnabled ? "YES" : "NO"}
           </span>
         </div>
         <div className="flex justify-between border-b border-zinc-900/60 pb-2">
           <span className="text-zinc-400">LocalStorage:</span>
-          <span className={capabilities.localStorageSupported ? "text-neon-cyan font-bold" : "text-neon-rose font-bold"}>
+          <span className={capabilities.localStorageSupported ? "text-primary font-bold" : "text-neon-rose font-bold"}>
             {capabilities.localStorageSupported ? "YES" : "NO"}
           </span>
         </div>
         <div className="flex justify-between border-b border-zinc-900/60 pb-2">
           <span className="text-zinc-400">SessionStorage:</span>
-          <span className={capabilities.sessionStorageSupported ? "text-neon-cyan font-bold" : "text-neon-rose font-bold"}>
+          <span className={capabilities.sessionStorageSupported ? "text-primary font-bold" : "text-neon-rose font-bold"}>
             {capabilities.sessionStorageSupported ? "YES" : "NO"}
           </span>
         </div>
         <div className="flex justify-between border-b border-zinc-900/60 pb-2">
           <span className="text-zinc-400">IndexedDB Access:</span>
-          <span className={capabilities.indexedDbSupported ? "text-neon-cyan font-bold" : "text-neon-rose font-bold"}>
+          <span className={capabilities.indexedDbSupported ? "text-primary font-bold" : "text-neon-rose font-bold"}>
             {capabilities.indexedDbSupported ? "YES" : "NO"}
           </span>
         </div>
         <div className="flex justify-between border-b border-zinc-900/60 pb-2">
           <span className="text-zinc-400">Service Workers:</span>
-          <span className={capabilities.serviceWorkerSupported ? "text-neon-cyan font-bold" : "text-zinc-500"}>
+          <span className={capabilities.serviceWorkerSupported ? "text-primary font-bold" : "text-zinc-500"}>
             {capabilities.serviceWorkerSupported ? "SUPPORTED" : "UNSUPPORTED"}
           </span>
         </div>

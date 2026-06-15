@@ -37,6 +37,26 @@ const uaPresets: Record<string, string> = {
 
 const apiEndpoint = "/api/whoami";
 
+async function fetchPublicIpWithFallback(): Promise<string> {
+  const providers = [
+    "https://api64.ipify.org?format=json",
+    "https://api.ipify.org?format=json",
+    "https://ipapi.co/json/"
+  ];
+  for (const url of providers) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.ip) return data.ip;
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch IP from ${url}:`, e);
+    }
+  }
+  return "";
+}
+
 export function useAuditPipeline() {
   const [auditStarted, setAuditStarted] = useState(false);
   const [auditComplete, setAuditComplete] = useState(false);
@@ -73,7 +93,7 @@ export function useAuditPipeline() {
   const [adBlockerActive, setAdBlockerActive] = useState<boolean | null>(null);
 
   // Simulator Form States
-  const [simulateSpoof, setSimulateSpoof] = useState(false);
+  const [simulateSpoof, setSimulateSpoof] = useState(true);
   const [spoofIp, setSpoofIp] = useState("");
   const [selectedUaPreset, setSelectedUaPreset] = useState("current");
   const [customUa, setCustomUa] = useState("");
@@ -135,10 +155,53 @@ export function useAuditPipeline() {
         let fetchUrl = apiEndpoint;
         const clientOsHint = typeof navigator !== 'undefined' ? (navigator.platform || "") : "";
 
+        let detectedIp = "";
+        let clientPlatform = "";
+        let clientOsVersion = "";
+
+        // 1. Fetch high-entropy client hints
+        if (typeof navigator !== 'undefined' && (navigator as any).userAgentData) {
+          const uaData = (navigator as any).userAgentData;
+          clientPlatform = uaData.platform || "";
+          try {
+            const highEntropy = await uaData.getHighEntropyValues(["platformVersion"]);
+            clientOsVersion = highEntropy.platformVersion || "";
+          } catch (e) {
+            console.warn("Failed to get high entropy userAgentData:", e);
+          }
+        }
+
+        // 2. Fetch public IP if running locally
+        try {
+          const hostname = typeof window !== 'undefined' ? window.location.hostname : "";
+          const isLocal = hostname === "localhost" || 
+                          hostname === "127.0.0.1" || 
+                          hostname === "[::1]" || 
+                          hostname.startsWith("192.168.") || 
+                          hostname.startsWith("10.") ||
+                          hostname.endsWith(".local");
+          
+          if (isLocal && !overrideIp) {
+            logMessage("[NETWORK] Local environment detected. Fetching public IP for accurate audit...");
+            detectedIp = await fetchPublicIpWithFallback();
+            if (detectedIp) {
+              logMessage(`[NETWORK] Public IP auto-resolved: ${detectedIp}`);
+            } else {
+              logMessage("[NETWORK] Public IP lookup failed. Falling back to local loopback.");
+            }
+          }
+        } catch (e) {
+          console.warn("Error auto-resolving local environment IP:", e);
+        }
+
         const queryParams: string[] = [];
         if (overrideIp) queryParams.push(`spoofIp=${encodeURIComponent(overrideIp)}`);
         if (overrideUa) queryParams.push(`spoofUserAgent=${encodeURIComponent(overrideUa)}`);
         if (clientOsHint) queryParams.push(`clientOs=${encodeURIComponent(clientOsHint)}`);
+        if (detectedIp) queryParams.push(`detectedIp=${encodeURIComponent(detectedIp)}`);
+        if (clientPlatform) queryParams.push(`clientPlatform=${encodeURIComponent(clientPlatform)}`);
+        if (clientOsVersion) queryParams.push(`clientOsVersion=${encodeURIComponent(clientOsVersion)}`);
+        
         const queryStr = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
 
         try {

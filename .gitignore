@@ -9,7 +9,7 @@ dist/
 .cache/
 visits.json
 apps/backend/dist/
-apps/backend/src/data/
+apps/backend/src/data/*.mmdb
 apps/frontend/.next/
 .next/
 out/

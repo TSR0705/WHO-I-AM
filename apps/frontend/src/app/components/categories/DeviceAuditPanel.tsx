@@ -58,11 +58,11 @@ export default function DeviceAuditPanel({
         <span className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-0.5">Form Factor</span>
         <span className="font-bold text-zinc-200 uppercase flex items-center gap-2 mt-0.5">
           {data.device === "mobile" ? (
-            <Smartphone className="w-4 h-4 text-neon-cyan" />
+            <Smartphone className="w-4 h-4 text-primary" />
           ) : data.device === "tablet" ? (
-            <Tablet className="w-4 h-4 text-neon-cyan" />
+            <Tablet className="w-4 h-4 text-primary" />
           ) : (
-            <Laptop className="w-4 h-4 text-neon-cyan" />
+            <Laptop className="w-4 h-4 text-primary" />
           )}
           {data.device}
         </span>

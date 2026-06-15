@@ -99,7 +99,7 @@ export default function FingerprintAuditPanel({
       />
       {canvasUniqueness !== null && (
         <div className="px-4 pb-4 -mt-1 text-[10px] text-zinc-500">
-          Shared by: <strong className="text-neon-cyan font-bold">{canvasUniqueness.toFixed(2)}%</strong> of visitors
+          Shared by: <strong className="text-primary font-bold">{canvasUniqueness.toFixed(2)}%</strong> of visitors
         </div>
       )}
 
@@ -121,7 +121,7 @@ export default function FingerprintAuditPanel({
       />
       {audioUniqueness !== null && (
         <div className="px-4 pb-4 -mt-1 text-[10px] text-zinc-500">
-          Shared by: <strong className="text-neon-cyan font-bold">{audioUniqueness.toFixed(2)}%</strong> of visitors
+          Shared by: <strong className="text-primary font-bold">{audioUniqueness.toFixed(2)}%</strong> of visitors
         </div>
       )}
     </div>

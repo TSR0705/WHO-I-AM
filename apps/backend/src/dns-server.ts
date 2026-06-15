@@ -68,8 +68,8 @@ export class DNSServer {
       offset += 1 + len;
     }
 
-    // We are looking for domains like: <session-token>.dns.whoami.com
-    // Labels array: ["xyz123", "dns", "whoami", "com"]
+    // We are looking for domains like: <session-token>.dns.exposur.com
+    // Labels array: ["xyz123", "dns", "exposur", "com"]
     if (labels.length >= 3 && labels[1] === 'dns') {
       const sessionToken = labels[0];
       const resolverIp = rinfo.address;

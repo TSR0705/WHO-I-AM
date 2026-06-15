@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🕵️‍♂️ WHO-I-AM
+# 🕵️‍♂️ Exposur
 
 **The Ultimate Privacy Diagnostics & Location Intelligence Hub**
 
@@ -16,9 +16,9 @@
 
 ---
 
-**WHO-I-AM** is an advanced privacy diagnostics platform designed to analyze client network routing, browser properties, and hardware fingerprints to expose what metadata is leaked to web servers. 
+**Exposur** is an advanced privacy diagnostics platform designed to analyze client network routing, browser properties, and hardware fingerprints to expose what metadata is leaked to web servers. 
 
-Unlike traditional services, WHO-I-AM runs a **hybrid local/cloud intelligence pipeline**, executing zero-latency GeoIP and Anonymization database checks locally in-memory, while offloading uniqueness calculations and DNS leak diagnostics to external services.
+Unlike traditional services, Exposur runs a **hybrid local/cloud intelligence pipeline**, executing zero-latency GeoIP and Anonymization database checks locally in-memory, while offloading uniqueness calculations and DNS leak diagnostics to external services.
 
 ---
 
@@ -36,7 +36,7 @@ Unlike traditional services, WHO-I-AM runs a **hybrid local/cloud intelligence p
 
 ## ✨ Core Features
 
-WHO-I-AM implements bleeding-edge privacy diagnostic capabilities entirely in-house:
+Exposur implements bleeding-edge privacy diagnostic capabilities entirely in-house:
 
 * **🌍 Local ASN & Geolocation Engines:** In-memory lookups of country, region, city, coordinates, and ISP using Brotli-compressed MaxMind databases.
 * **☁️ Infrastructure Identification:** Identifies AWS, Google Cloud, and Cloudflare subnets via fast binary search ($O(\log N)$) across IPv4 and IPv6 space.
@@ -60,7 +60,7 @@ This project was engineered to demonstrate deep, full-stack understanding of net
 
 ## 🏗️ System Architecture
 
-WHO-I-AM is designed as a polyglot monorepo deployed seamlessly via Vercel Services.
+Exposur is designed as a polyglot monorepo deployed seamlessly via Vercel Services.
 
 <div align="center">
   <img src="docs/images/system_architecture.png" alt="System Architecture" width="800">
@@ -70,7 +70,7 @@ WHO-I-AM is designed as a polyglot monorepo deployed seamlessly via Vercel Servi
 
 ## 🚀 Quick Start
 
-Get WHO-I-AM running locally in minutes.
+Get Exposur running locally in minutes.
 
 ### 1. Installation
 

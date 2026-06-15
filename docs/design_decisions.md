@@ -1,6 +1,6 @@
-# WHO-I-AM: Design Decisions & Tradeoffs
+# Exposur: Design Decisions & Tradeoffs
 
-This document details the architectural decisions, database selections, and engineering tradeoffs made during the development of the WHO-I-AM intelligence engine.
+This document details the architectural decisions, database selections, and engineering tradeoffs made during the development of the Exposur intelligence engine.
 
 ---
 
@@ -29,7 +29,7 @@ MaxMind is the industry standard for open GeoIP intelligence, offering structure
 ## 3. Tor Exit Node Compilation
 
 ### The Decision
-Rather than calling Tor DNSEL (DNS-based Exit List) lookup servers or external checkers at runtime, WHO-I-AM scrapes, normalizes, and bundles a list of Tor exit IPs at build time.
+Rather than calling Tor DNSEL (DNS-based Exit List) lookup servers or external checkers at runtime, Exposur scrapes, normalizes, and bundles a list of Tor exit IPs at build time.
 
 ### Rationale
 * **Zero Runtime Overhead**: Parsing a static JSON file into a `Set` on startup gives $O(1)$ lookup complexity at runtime.

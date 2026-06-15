@@ -1,6 +1,6 @@
-# WHO-I-AM: Development Roadmap
+# Exposur: Development Roadmap
 
-This document outlines the phased roadmap of the WHO-I-AM privacy diagnostics system.
+This document outlines the phased roadmap of the Exposur privacy diagnostics system.
 
 ---
 

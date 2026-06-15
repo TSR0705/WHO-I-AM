@@ -1,6 +1,6 @@
-# WHO-I-AM: Frontend Documentation
+# Exposur: Frontend Documentation
 
-This document describes the Next.js application structure, component architecture, state management hooks, and UI visualizations of the WHO-I-AM user interface.
+This document describes the Next.js application structure, component architecture, state management hooks, and UI visualizations of the Exposur user interface.
 
 ---
 
@@ -74,7 +74,7 @@ The React state logic is encapsulated in `src/app/hooks/useAuditPipeline.ts`. It
   * WebGL parameters are read via `getWebGLFingerprint()`.
   * Browser API supports (localStorage, serviceWorker) are read on step 7.
 * **Uniqueness Calculation**: Sends client hashes to `/api/fingerprint` to retrieve historical matching percentages.
-* **DNS Leak Trigger**: Generates a random session token via `/api/dns-leak/init`, triggers a client-side DNS lookup to `token.dns.whoami.com` using a dummy `fetch` check, and polls `/api/dns-leak/check` after a 1.5s delay to map the resolver paths.
+* **DNS Leak Trigger**: Generates a random session token via `/api/dns-leak/init`, triggers a client-side DNS lookup to `token.dns.Exposur.com` using a dummy `fetch` check, and polls `/api/dns-leak/check` after a 1.5s delay to map the resolver paths.
 * **Score Calculation Engine**:
   * Starts at `100`.
   * Deduces `-15` for WebRTC leaks.

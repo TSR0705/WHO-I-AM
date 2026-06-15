@@ -1,6 +1,6 @@
-# WHO-I-AM: Deployment Guide
+# Exposur: Deployment Guide
 
-This guide details the steps required to configure, compile, test, and deploy the WHO-I-AM application locally, inside Docker, or on Vercel.
+This guide details the steps required to configure, compile, test, and deploy the Exposur application locally, inside Docker, or on Vercel.
 
 ---
 
@@ -41,7 +41,7 @@ npm install
 ```
 
 ### Step 2: Compile Local Intelligence Databases
-WHO-I-AM requires compiling location subnets and exit nodes at build time. Run:
+Exposur requires compiling location subnets and exit nodes at build time. Run:
 ```bash
 # Download and Brotli-compress MaxMind MMDB tables
 node apps/backend/scripts/download-db.js --force
@@ -64,7 +64,7 @@ The frontend will bind to `http://localhost:3000` (or another port depending on 
 
 ## 3. Docker Deployment
 
-WHO-I-AM includes a root `docker-compose.yml` to orchestrate services:
+Exposur includes a root `docker-compose.yml` to orchestrate services:
 
 ```yaml
 version: '3.8'
@@ -108,7 +108,7 @@ docker-compose up --build -d
 
 ## 4. Vercel Serverless Deployment
 
-WHO-I-AM uses Vercel Services to deploy both workspaces under a single domain.
+Exposur uses Vercel Services to deploy both workspaces under a single domain.
 
 ### vercel.json configuration
 The root `vercel.json` maps the frontend Next.js routing to the root `/` and handles backend Express routes under `/api`:
@@ -157,4 +157,4 @@ Vercel has a 50MB function zip limit on its Hobby tier. The raw MaxMind database
 
 ### 3. DNS Leak Test reports no resolvers
 * **Cause**: DNS server port binding block or missing DNS delegation records.
-* **Fix**: Ensure UDP Port 1053/53 is open and exposed. Set `DNS_DOMAIN` to a domain delegated to your WHO-I-AM server IP.
+* **Fix**: Ensure UDP Port 1053/53 is open and exposed. Set `DNS_DOMAIN` to a domain delegated to your Exposur server IP.

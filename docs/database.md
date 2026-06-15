@@ -1,6 +1,6 @@
-# WHO-I-AM: Database Documentation
+# Exposur: Database Documentation
 
-This document describes the schema, index strategies, fingerprint calculation algorithms, and fallback architectures of the database layers inside WHO-I-AM.
+This document describes the schema, index strategies, fingerprint calculation algorithms, and fallback architectures of the database layers inside Exposur.
 
 ---
 
@@ -65,7 +65,7 @@ To ensure secure data transit when connecting to modern managed database endpoin
 
 ## 4. Resilience and Fallback Architecture
 
-To support serverless environments (like Vercel Hobby limits or container restarts) and local dev environments without Postgres/Redis, WHO-I-AM implements a **graceful degradation protocol**:
+To support serverless environments (like Vercel Hobby limits or container restarts) and local dev environments without Postgres/Redis, Exposur implements a **graceful degradation protocol**:
 
 ```mermaid
 graph TD

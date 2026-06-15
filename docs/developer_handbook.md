@@ -1,6 +1,6 @@
-# WHO-I-AM: Developer Handbook
+# Exposur: Developer Handbook
 
-This handbook details the code style guidelines, backend architecture design patterns, client-side safety measures, and path resolution rules enforced in the WHO-I-AM project.
+This handbook details the code style guidelines, backend architecture design patterns, client-side safety measures, and path resolution rules enforced in the Exposur project.
 
 ---
 

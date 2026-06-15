@@ -1,6 +1,6 @@
-# WHO-I-AM: Intelligence Engine Documentation
+# Exposur: Intelligence Engine Documentation
 
-This document explains the core logic, execution mechanisms, accuracy metrics, and tradeoffs of the five local intelligence layers inside WHO-I-AM.
+This document explains the core logic, execution mechanisms, accuracy metrics, and tradeoffs of the five local intelligence layers inside Exposur.
 
 ---
 

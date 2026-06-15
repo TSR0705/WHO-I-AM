@@ -1,6 +1,6 @@
-# WHO-I-AM: Backend Documentation
+# Exposur: Backend Documentation
 
-This document explains the routing, services, middleware stack, custom compiler scripts, and data layers of the WHO-I-AM Express application.
+This document explains the routing, services, middleware stack, custom compiler scripts, and data layers of the Exposur Express application.
 
 ---
 
@@ -54,7 +54,7 @@ The Express entrypoint initializes server parameters, configures security middle
 
 ### DNS Leak Diagnostic Router (`src/routes/dns-leak.ts`)
 * **Endpoints**:
-  * `GET /api/dns-leak/init`: Generates a random session token and returning a test subdomain (e.g. `<token>.dns.whoami.com`).
+  * `GET /api/dns-leak/init`: Generates a random session token and returning a test subdomain (e.g. `<token>.dns.Exposur.com`).
   * `GET /api/dns-leak/check?token=xyz`: Queries Redis or the local memory cache for all resolver IPs that attempted to resolve this subdomain, resolving their geographical location to highlight leak origins.
 
 ---

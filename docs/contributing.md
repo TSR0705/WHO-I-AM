@@ -1,6 +1,6 @@
-# WHO-I-AM: Contributor Guide
+# Exposur: Contributor Guide
 
-Welcome! This guide outlines the development workflow, testing guidelines, and code patterns for contributing to WHO-I-AM.
+Welcome! This guide outlines the development workflow, testing guidelines, and code patterns for contributing to Exposur.
 
 ---
 
@@ -40,7 +40,7 @@ We utilize **Jest** for backend and service level testing. Tests verify the inte
 ### Execute Tests
 Run all test suites across the monorepo:
 ```bash
-npm run test --workspace=whoami-backend
+npm run test --workspace=exposur-backend
 ```
 
 ### Adding Unit Tests

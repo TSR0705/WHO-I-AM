@@ -1,10 +1,10 @@
-# WHO-I-AM: API Reference
+# Exposur: API Reference
 
 This document provides request, response, error schemas, and execution examples for all API endpoints.
 
 ---
 
-## 1. Get WhoAmI Diagnostics (`GET /api/whoami`)
+## 1. Get Exposur Diagnostics (`GET /api/whoami`)
 
 Analyzes client IP routing, user-agent details, proxy forwarding parameters, and location.
 
@@ -179,4 +179,4 @@ Retrieves the list of DNS resolver IPs that attempted to resolve the initialized
   ```
 
 ### Prometheus Metrics (`GET /metrics`)
-* **Response**: Standard plain-text metric values for CPU, memory, garbage collection, and custom API counters (`whoami_http_requests_total`).
+* **Response**: Standard plain-text metric values for CPU, memory, garbage collection, and custom API counters (`exposur_http_requests_total`).

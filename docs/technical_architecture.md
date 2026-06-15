@@ -1,15 +1,15 @@
-# WHO-I-AM: Technical Architecture Document
+# Exposur: Technical Architecture Document
 
-This document provides a comprehensive analysis of the system architecture, directory topology, data flows, and request lifecycles of the WHO-I-AM application.
+This document provides a comprehensive analysis of the system architecture, directory topology, data flows, and request lifecycles of the Exposur application.
 
 ---
 
 ## 1. Directory Structure and Monorepo Layout
 
-WHO-I-AM is organized as an npm monorepo with decoupled frontend and backend workspaces under `apps/`:
+Exposur is organized as an npm monorepo with decoupled frontend and backend workspaces under `apps/`:
 
 ```text
-WHO-I-AM-main/
+Exposur-main/
 ├── apps/
 │   ├── backend/                 # Node.js/Express service
 │   │   ├── src/
@@ -78,7 +78,7 @@ Every HTTP request sent to the Express API traverses the following middleware st
 4. **Rate Limiter (`express-rate-limit`)**:
    * Caps traffic at 120 requests per minute per IP to mitigate DoS attempts.
 5. **Prometheus Telemetry Interceptor**:
-   * Tracks HTTP request counts (`whoami_http_requests_total`) and calculates latencies (`whoami_http_request_duration_seconds`) across method, path, and response status codes.
+   * Tracks HTTP request counts (`exposur_http_requests_total`) and calculates latencies (`exposur_http_request_duration_seconds`) across method, path, and response status codes.
 6. **Database Connection Warmup**:
    * An asynchronous hook ensuring the Postgres pool is initialized and database schema tables are ready before processing queries.
 7. **Router Dispatcher**:

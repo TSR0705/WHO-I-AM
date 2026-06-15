@@ -24,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Run Backend Integration Tests
-        run: npm run test --workspace=whoami-backend
+        run: npm run test --workspace=exposur-backend
 
       - name: Verify Workspace Build and Next.js Compilation
         run: npm run build

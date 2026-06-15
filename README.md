@@ -2,7 +2,7 @@
 
 # 🕵️‍♂️ Exposur
 
-**The Ultimate Privacy Diagnostics & Location Intelligence Hub**
+**Discover What the Internet Already Knows About You.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
@@ -10,13 +10,13 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
 [![Express](https://img.shields.io/badge/Express.js-4.x-white?logo=express)](https://expressjs.com/)
 
-[**Explore Documentation**](docs/README.md) · [**Report Bug**](https://github.com/TSR0705/WHO-I-AM/issues) · [**Request Feature**](https://github.com/TSR0705/WHO-I-AM/issues)
+[**Explore Documentation**](docs/README.md) · [**Report Bug**](https://github.com/TSR0705/Exposur/issues) · [**Request Feature**](https://github.com/TSR0705/Exposur/issues)
 
 </div>
 
 ---
 
-**Exposur** is an advanced privacy diagnostics platform designed to analyze client network routing, browser properties, and hardware fingerprints to expose what metadata is leaked to web servers. 
+**Exposur** is a privacy intelligence platform that analyzes browser fingerprints, network configurations, DNS behavior, and device metadata to show users what information about them is publicly discoverable online. 
 
 Unlike traditional services, Exposur runs a **hybrid local/cloud intelligence pipeline**, executing zero-latency GeoIP and Anonymization database checks locally in-memory, while offloading uniqueness calculations and DNS leak diagnostics to external services.
 

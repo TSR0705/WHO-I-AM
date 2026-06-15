@@ -31,7 +31,7 @@ export default function Home() {
               EXP◉SUR
             </div>
             <p className="text-zinc-400 text-sm">
-              Built to help individuals understand and reduce their public digital exposure.
+              Help people understand and reduce their public digital exposure.
             </p>
           </div>
           <div className="space-y-2">

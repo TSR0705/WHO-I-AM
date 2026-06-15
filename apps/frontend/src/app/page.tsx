@@ -22,6 +22,29 @@ export default function Home() {
         
         <Counter />
       </section>
+
+      {/* Footer Section */}
+      <footer className="border-t border-white/10 bg-black/60 py-12 px-4 md:px-8 relative z-10 no-print">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className="space-y-4 max-w-sm">
+            <div className="text-2xl font-black tracking-widest text-white font-mono flex items-center gap-1">
+              EXP◉SUR
+            </div>
+            <p className="text-zinc-400 text-sm">
+              Built to help individuals understand and reduce their public digital exposure.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-white font-mono text-sm uppercase tracking-wider font-bold">Positioning</h4>
+            <p className="text-primary text-sm italic font-mono">
+              Discover What the Internet Already Knows About You.
+            </p>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto border-t border-white/5 mt-8 pt-6 text-center text-xs text-zinc-500 font-mono">
+          &copy; 2026 Exposur &middot; PRIVACY DIAGNOSTICS &middot; All Rights Reserved
+        </div>
+      </footer>
     </main>
   );
 }

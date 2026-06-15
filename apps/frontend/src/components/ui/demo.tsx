@@ -30,9 +30,10 @@ const teamAvatars = [
 ];
 
 const stats = [
-  { emoji: "🚀", label: "IN CLIENT REVENUE GENERATED", value: "$5M+" },
-  { emoji: "📈", label: "BUSINESSES LAUNCHED", value: "200+" },
-  { emoji: "💰", label: "SAVED IN OPERATIONAL COSTS", value: "$500K+" },
+  { emoji: "🔍", label: "PUBLIC SOURCES CHECKED", value: "500+" },
+  { emoji: "🛡️", label: "EXPOSURE CATEGORIES ANALYZED", value: "12+" },
+  { emoji: "⚡", label: "AVERAGE SCAN TIME", value: "< 2s" },
+  { emoji: "📊", label: "DIGITAL FOOTPRINT INSIGHTS", value: "1,000+" },
 ];
 
 function AvatarStack() {
@@ -82,6 +83,26 @@ function StatsMarquee() {
 export default function Hero() {
   return (
     <section className="relative flex h-screen w-full flex-col items-start justify-end">
+      {/* Header / Navigation */}
+      <header className="absolute top-0 left-0 w-full z-20 flex items-center justify-between px-4 py-6 sm:px-8 lg:px-16 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="text-xl font-black tracking-widest text-white font-mono flex items-center gap-1">
+          EXP◉SUR
+        </div>
+        <nav className="hidden md:flex items-center gap-8 text-xs font-semibold font-mono text-zinc-300 uppercase tracking-wider">
+          <a href="#features" className="hover:text-primary transition">Features</a>
+          <a href="#how-it-works" className="hover:text-primary transition">How It Works</a>
+          <a href="#privacy-report" className="hover:text-primary transition">Privacy Report</a>
+          <a href="#faqs" className="hover:text-primary transition">FAQs</a>
+        </nav>
+        <div>
+          <a href="/dashboard">
+            <Button className="rounded-none py-2 px-5 font-bold text-black text-xs uppercase tracking-wider cursor-pointer">
+              Analyze Me
+            </Button>
+          </a>
+        </div>
+      </header>
+
       <div
         className="absolute inset-0 bg-center bg-cover"
         style={{
@@ -102,23 +123,26 @@ export default function Hero() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
           <div className="w-full space-y-4 sm:w-1/2">
             <h1 className="font-medium text-4xl text-white leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              We <span className="text-primary">think</span>, you{" "}
-              <span className="text-primary">grow</span>
-              <br />
-              <span className="text-white">— that's the deal</span>
+              Discover What <br />
+              You're <span className="text-primary">Exposing</span> Online.
             </h1>
-            <Button className="rounded-none py-0 pr-0 font-normal text-black text-lg">
-              Get Template
-              <span className="border-neutral-500 border-l p-3 ml-2">
-                <ArrowRight className="inline-block" />
-              </span>
-            </Button>
+            <div className="flex flex-wrap gap-4 items-center">
+              <a href="/dashboard">
+                <Button className="rounded-none py-3 px-6 font-bold text-black text-lg cursor-pointer flex items-center gap-2">
+                  Check My Exposur
+                  <ArrowRight className="w-5 h-5 inline-block" />
+                </Button>
+              </a>
+              <a href="#how-it-works">
+                <button className="rounded-none border border-white/20 hover:border-primary hover:text-primary transition py-3 px-6 font-bold text-white text-lg bg-transparent cursor-pointer">
+                  Learn How It Works
+                </button>
+              </a>
+            </div>
           </div>
           <div className="w-full sm:w-1/2">
             <p className="text-base text-primary italic sm:text-right md:text-2xl">
-              We take your big ideas and turn them into clear, winning
-              strategies. From setting up your company to scaling it worldwide,
-              we're here every step of the way.
+              Analyze your public digital footprint and uncover exposed emails, usernames, social profiles, metadata trails, and privacy risks before someone else does.
             </p>
           </div>
         </div>

@@ -250,8 +250,8 @@ export default function Dashboard() {
                   <Shield className="w-4 h-4 text-neon-cyan animate-pulse" />
                 </div>
                 <div>
-                  <h1 className="text-sm font-black tracking-tight text-white uppercase flex items-center gap-1.5">
-                    WhoAmI<span className="text-neon-cyan">.Audit</span>
+                  <h1 className="text-sm font-black tracking-tight text-white uppercase flex items-center gap-1.5 font-mono">
+                    EXP◉SUR
                     {!auditComplete && <Activity className="w-3.5 h-3.5 text-neon-cyan animate-pulse" />}
                   </h1>
                 </div>
@@ -623,9 +623,9 @@ export default function Dashboard() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900/80 bg-zinc-950 py-6 text-center text-[10px] text-zinc-650 font-mono mt-auto relative z-30 tracking-widest uppercase no-print">
+      <footer className="border-t border-zinc-900/80 bg-zinc-950 py-6 text-center text-[10px] text-zinc-500 font-mono mt-auto relative z-30 tracking-widest uppercase no-print">
         <div>
-          WhoAmI.Audit &middot; PRIVACY DIAGNOSTICS &middot; &copy; 2026
+          Exposur &middot; PRIVACY DIAGNOSTICS &middot; &copy; 2026
         </div>
       </footer>
 

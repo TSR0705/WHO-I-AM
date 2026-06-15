@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WhoAmI.Audit - Interactive Privacy Sandbox & Fingerprint Tester",
-  description: "Audit your digital footprint, test browser fingerprint uniqueness, identify WebRTC/DNS leaks, and verify your VPN configuration.",
+  title: "Exposur - Interactive Privacy Sandbox & Fingerprint Tester",
+  description: "Discover What the Internet Already Knows About You. Analyze public digital footprint, test browser fingerprint uniqueness, identify WebRTC/DNS leaks, and verify public digital exposure.",
 };
 
 export default function RootLayout({

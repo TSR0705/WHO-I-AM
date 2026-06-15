@@ -18,8 +18,6 @@
   --animate-scanline: scanline 8s linear infinite;
   --animate-cyber-glow: cyber-glow 2s ease-in-out infinite alternate;
   --animate-spin-slow: spin 8s linear infinite;
-  --animate-marquee: marquee var(--duration) infinite linear;
-  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   --color-primary: oklch(0.95 0.16 118.89);
 }
 
@@ -43,7 +41,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(-100% - var(--gap)));
+    transform: translateX(calc(-100% - var(--gap, 1rem)));
   }
 }
 
@@ -52,7 +50,7 @@
     transform: translateY(0);
   }
   to {
-    transform: translateY(calc(-100% - var(--gap)));
+    transform: translateY(calc(-100% - var(--gap, 1rem)));
   }
 }
 
@@ -464,5 +462,19 @@ body {
 .panel-buttons button:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+@utility animate-marquee {
+  animation-name: marquee;
+  animation-duration: var(--duration, 40s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@utility animate-marquee-vertical {
+  animation-name: marquee-vertical;
+  animation-duration: var(--duration, 40s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 

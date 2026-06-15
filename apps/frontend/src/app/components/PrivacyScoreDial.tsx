@@ -45,8 +45,8 @@ export default function PrivacyScoreDial({
   };
 
   const getDialColorClass = () => {
-    if (status !== "completed") return "text-neon-cyan/50 animate-pulse";
-    if (score >= 75) return "text-neon-cyan drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]";
+    if (status !== "completed") return "text-primary/50 animate-pulse";
+    if (score >= 75) return "text-primary drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]";
     if (score >= 50) return "text-neon-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]";
     return "text-neon-rose drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]";
   };
@@ -66,7 +66,7 @@ export default function PrivacyScoreDial({
   return (
     <div className="glass-panel rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden print-card min-h-[260px]">
       {/* High-tech glow background */}
-      <div className="absolute -right-10 -top-10 w-40 h-40 bg-neon-cyan/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
       <div className="relative z-10 w-full">
         <div className="flex justify-between items-center">

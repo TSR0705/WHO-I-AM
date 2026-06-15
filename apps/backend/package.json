@@ -1,7 +1,7 @@
 {
-  "name": "whoami-backend",
+  "name": "exposur-backend",
   "version": "1.0.0",
-  "description": "TypeScript Express backend for WhoAmI",
+  "description": "TypeScript Express backend for Exposur",
   "main": "dist/index.js",
   "scripts": {
     "build": "node scripts/download-db.js && npx ts-node-dev --transpile-only scripts/compile-infra.ts && npx ts-node-dev --transpile-only scripts/compile-tor.ts && tsc",

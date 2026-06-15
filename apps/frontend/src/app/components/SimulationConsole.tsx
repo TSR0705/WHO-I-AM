@@ -31,14 +31,14 @@ export default function SimulationConsole({
     <div className="glass-panel rounded-3xl overflow-hidden shadow-xl no-print">
       <div className="px-6 py-4 border-b border-zinc-900 bg-zinc-900/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Settings className="w-4 h-4 text-neon-cyan" />
+          <Settings className="w-4 h-4 text-primary" />
           <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">
             SANDBOX SIMULATOR
           </h3>
         </div>
         <button 
           onClick={() => setSimulateSpoof(!simulateSpoof)}
-          className="text-[10px] font-mono font-bold text-neon-cyan hover:text-neon-cyan/80 transition-colors uppercase tracking-wider cursor-pointer"
+          className="text-[10px] font-mono font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider cursor-pointer"
         >
           {simulateSpoof ? "Collapse" : "Expand Sandbox"}
         </button>
@@ -53,7 +53,7 @@ export default function SimulationConsole({
               placeholder="e.g., 8.8.8.8"
               value={spoofIp}
               onChange={(e) => setSpoofIp(e.target.value)}
-              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan/20 outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
+              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
             />
           </div>
 
@@ -62,7 +62,7 @@ export default function SimulationConsole({
             <select
               value={selectedUaPreset}
               onChange={(e) => setSelectedUaPreset(e.target.value)}
-              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all cursor-pointer"
+              className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-primary outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all cursor-pointer"
             >
               <option value="current" className="bg-zinc-950">Default Browser Profile</option>
               <option value="iphone" className="bg-zinc-950">Safari - Apple iPhone (iOS)</option>
@@ -80,7 +80,7 @@ export default function SimulationConsole({
                 placeholder="Enter custom User-Agent details..."
                 value={customUa}
                 onChange={(e) => setCustomUa(e.target.value)}
-                className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-neon-cyan outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
+                className="w-full bg-zinc-950/50 border border-zinc-900 focus:border-primary outline-none text-xs font-mono text-zinc-300 px-3.5 py-2.5 rounded-2xl transition-all placeholder:text-zinc-700"
               />
             </div>
           )}
@@ -88,7 +88,7 @@ export default function SimulationConsole({
           <div className="flex gap-3 pt-2">
             <button
               onClick={onApply}
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 hover:border-neon-cyan/50 text-neon-cyan text-xs font-mono font-bold transition-all cursor-pointer tracking-wider"
+              className="flex-1 px-4 py-2.5 rounded-2xl bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 text-primary text-xs font-mono font-bold transition-all cursor-pointer tracking-wider"
             >
               ENGAGE SPOOF
             </button>

@@ -43,7 +43,7 @@ app.use(helmet({
       scriptSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
       styleSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
       imgSrc: ["'self'", 'data:', 'https://{s}.tile.openstreetmap.org', 'https://*.tile.openstreetmap.org', 'https://tile.openstreetmap.org'],
-      connectSrc: ["'self'", 'https://ipapi.co', 'https://api.ipify.org', 'https://*.tile.openstreetmap.org'],
+      connectSrc: ["'self'", 'https://ipapi.co', 'https://api.ipify.org', 'https://api64.ipify.org', 'https://*.tile.openstreetmap.org'],
       fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],

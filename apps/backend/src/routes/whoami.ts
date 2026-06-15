@@ -7,6 +7,36 @@ import { AsnLookupService } from '../services/asn';
 
 const router = Router();
 
+function isLocalIp(addr: string): boolean {
+  const clean = addr.trim().replace(/^::ffff:/, '');
+  if (clean.startsWith('127.') || clean === '::1' || clean === '0:0:0:0:0:0:0:1') return true;
+  if (clean.startsWith('10.') || clean.startsWith('192.168.') || clean.startsWith('169.254.')) return true;
+  if (clean.startsWith('172.')) {
+    const parts = clean.split('.');
+    if (parts.length >= 2) {
+      const secondOctet = parseInt(parts[1], 10);
+      if (secondOctet >= 16 && secondOctet <= 31) return true;
+    }
+  }
+  const normalized = clean.toLowerCase();
+  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+  if (normalized.startsWith('fe8') || normalized.startsWith('fe9') || normalized.startsWith('fea') || normalized.startsWith('feb')) return true;
+  return false;
+}
+
+function getWindowsVersionName(platformVersion: string): string {
+  if (!platformVersion) return '10';
+  const cleanVersion = platformVersion.replace(/"/g, '').trim();
+  const parts = cleanVersion.split('.');
+  const major = parseInt(parts[0], 10);
+  if (!isNaN(major)) {
+    if (major >= 13 || major >= 22000) {
+      return '11';
+    }
+  }
+  return '10';
+}
+
 router.get('/whoami', async (req: Request, res: Response) => {
   const ipRaw = req.ip || (req as any).clientIp || '';
   let ip = ipRaw.replace(/^::ffff:/, '').replace(/^\[::1\]$|^::1$/, '127.0.0.1');
@@ -14,14 +44,22 @@ router.get('/whoami', async (req: Request, res: Response) => {
 
   const ua = req.headers['user-agent'] || '';
 
-  // Spoof checks
+  // Spoof checks and client hints
   const spoofIp = req.query.spoofIp as string;
   const spoofUserAgent = req.query.spoofUserAgent as string;
   const clientOs = req.query.clientOs as string;
+  const detectedIp = req.query.detectedIp as string;
+  const clientPlatform = req.query.clientPlatform as string;
+  const clientOsVersion = req.query.clientOsVersion as string;
+
+  const chPlatform = (req.headers['sec-ch-ua-platform'] as string) || '';
+  const chPlatformVersion = (req.headers['sec-ch-ua-platform-version'] as string) || '';
 
   let ipToAudit = ip;
   if (spoofIp && spoofIp.trim() !== '') {
     ipToAudit = spoofIp.trim();
+  } else if (isLocalIp(ip) && detectedIp && detectedIp.trim() !== '' && !isLocalIp(detectedIp)) {
+    ipToAudit = detectedIp.trim();
   }
 
   let uaToAudit = ua;
@@ -31,8 +69,35 @@ router.get('/whoami', async (req: Request, res: Response) => {
 
   const parsed = new UAParser(uaToAudit).getResult();
   const browser = parsed.browser && parsed.browser.name ? `${parsed.browser.name} ${parsed.browser.version || ''}`.trim() : 'Unknown';
-  const os = parsed.os && parsed.os.name ? `${parsed.os.name} ${parsed.os.version || ''}`.trim() : 'Unknown';
+  let os = parsed.os && parsed.os.name ? `${parsed.os.name} ${parsed.os.version || ''}`.trim() : 'Unknown';
   const device = parsed.device && parsed.device.type ? parsed.device.type : 'desktop';
+
+  // Apply OS version normalization from Client Hints
+  const isWindows = os.toLowerCase().includes('windows') || 
+                    chPlatform.toLowerCase().includes('win') || 
+                    (clientPlatform && clientPlatform.toLowerCase().includes('win'));
+                     
+  const isMac = os.toLowerCase().includes('mac') || 
+                chPlatform.toLowerCase().includes('mac') || 
+                (clientPlatform && clientPlatform.toLowerCase().includes('mac'));
+
+  const isAndroid = os.toLowerCase().includes('android') || 
+                    chPlatform.toLowerCase().includes('android') || 
+                    (clientPlatform && clientPlatform.toLowerCase().includes('android'));
+
+  const versionToUse = (clientOsVersion && clientOsVersion.trim() !== '') ? clientOsVersion : chPlatformVersion;
+
+  if (versionToUse && versionToUse.trim() !== '') {
+    const cleanVer = versionToUse.replace(/"/g, '').trim();
+    if (isWindows) {
+      const windowsVer = getWindowsVersionName(cleanVer);
+      os = `Windows ${windowsVer}`;
+    } else if (isMac) {
+      os = `macOS ${cleanVer}`;
+    } else if (isAndroid) {
+      os = `Android ${cleanVer}`;
+    }
+  }
 
   // 1. Proxy Headers Parser
   const viaHeader = req.headers['via'] || '';

@@ -36,7 +36,7 @@ export interface SecurityAuditData {
   userAgentMismatch: boolean;
 }
 
-export interface WhoAmIData {
+export interface ExposurData {
   ip: string;
   network?: {
     isp: string;

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { WhoAmIData, HistoryEntry, BrowserCapabilities, SecurityConfig } from "../types";
+import { ExposurData, HistoryEntry, BrowserCapabilities, SecurityConfig } from "../types";
 import {
   getCanvasFingerprint,
   getAudioFingerprint,
@@ -68,7 +68,7 @@ export function useAuditPipeline() {
   const [scanLogs, setScanLogs] = useState<string[]>([]);
 
   // Data States
-  const [data, setData] = useState<WhoAmIData | null>(null);
+  const [data, setData] = useState<ExposurData | null>(null);
   const [localIPs, setLocalIPs] = useState<string[]>([]);
   const [canvasHash, setCanvasHash] = useState<string>("detecting...");
   const [audioHash, setAudioHash] = useState<string>("detecting...");
@@ -108,7 +108,7 @@ export function useAuditPipeline() {
   // Load history from LocalStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("whoami_history");
+      const saved = localStorage.getItem("exposur_history");
       if (saved) {
         setLocalHistory(JSON.parse(saved));
       }
@@ -150,7 +150,7 @@ export function useAuditPipeline() {
       
       // Execute the actual checks inline as we progress
       if (c === 0) {
-        let fetchedData: WhoAmIData | null = null;
+        let fetchedData: ExposurData | null = null;
         let lastError: any = null;
         let fetchUrl = apiEndpoint;
         const clientOsHint = typeof navigator !== 'undefined' ? (navigator.platform || "") : "";
@@ -378,7 +378,7 @@ export function useAuditPipeline() {
     setLocalHistory(prev => {
       const updated = [entry, ...prev.slice(0, 4)];
       try {
-        localStorage.setItem("whoami_history", JSON.stringify(updated));
+        localStorage.setItem("exposur_history", JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -483,7 +483,7 @@ export function useAuditPipeline() {
   const handleShareReport = useCallback(() => {
     if (!data) return;
     const score = getPrivacyScore();
-    const shareText = `WhoAmI Audit Report\nIPv4 Address: ${data.ip}\nPrivacy Score: ${score}/100\nAnonymization: ${data.anonymization.provider}\nRun your scan here: ${window.location.origin}`;
+    const shareText = `Exposur Audit Report\nIPv4 Address: ${data.ip}\nPrivacy Score: ${score}/100\nAnonymization: ${data.anonymization.provider}\nRun your scan here: ${window.location.origin}`;
     navigator.clipboard.writeText(shareText).then(() => {
       alert("Privacy Audit Report copied to clipboard!");
     });

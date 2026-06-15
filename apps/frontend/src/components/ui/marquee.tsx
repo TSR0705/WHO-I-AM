@@ -23,8 +23,8 @@ export function Marquee({
     <div
       {...props}
       className={cn(
-        "group flex overflow-hidden p-2 [--duration:40s] [--gap:1rem] [gap:var(--gap)]",
-        vertical ? "flex-col" : "flex-row",
+        "group flex w-full overflow-hidden p-2 [--duration:40s] [--gap:1rem] [gap:var(--gap)]",
+        vertical ? "flex-col flex-nowrap" : "flex-row flex-nowrap",
         className
       )}
     >
@@ -33,10 +33,11 @@ export function Marquee({
           key={i}
           className={cn(
             "flex shrink-0 justify-around [gap:var(--gap)]",
-            vertical ? "flex-col animate-marquee-vertical" : "flex-row animate-marquee",
+            vertical ? "flex-col flex-nowrap animate-marquee-vertical min-h-full" : "flex-row flex-nowrap animate-marquee min-w-full",
             reverse && "[animation-direction:reverse]",
             pauseOnHover && "group-hover:[animation-play-state:paused]"
           )}
+          aria-hidden={i !== 0}
         >
           {children}
         </div>

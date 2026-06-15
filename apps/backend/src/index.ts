@@ -64,13 +64,13 @@ app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 client.collectDefaultMetrics();
 
 const httpRequestsTotal = new client.Counter({
-  name: 'whoami_http_requests_total',
+  name: 'exposur_http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'path', 'status']
 });
 
 const httpRequestDurationSeconds = new client.Histogram({
-  name: 'whoami_http_request_duration_seconds',
+  name: 'exposur_http_request_duration_seconds',
   help: 'HTTP request duration in seconds',
   labelNames: ['method', 'path', 'status'],
   buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5]

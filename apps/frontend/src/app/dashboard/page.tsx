@@ -28,6 +28,7 @@ import RiskFindingsCard from "../components/RiskFindingsCard";
 import SimulationConsole from "../components/SimulationConsole";
 import EducationalDrawer from "../components/EducationalDrawer";
 import AuditCategoryCard from "../components/AuditCategoryCard";
+import { StatsMarquee } from "@/components/ui/demo";
 
 // Category Panels
 import NetworkAuditPanel from "../components/categories/NetworkAuditPanel";
@@ -150,7 +151,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-cyber-black text-zinc-100 font-sans selection:bg-neon-cyan/20 selection:text-neon-cyan relative">
+    <div className="flex flex-col min-h-screen bg-cyber-black text-zinc-100 font-sans selection:bg-primary/20 selection:text-primary relative">
       
       {/* Global CSS Print Style Sheets */}
       <style jsx global>{`
@@ -193,8 +194,8 @@ export default function Dashboard() {
 
       {/* Cyber Grid background */}
       <div className="absolute inset-0 cyber-grid pointer-events-none no-print" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/3 rounded-full blur-3xl pointer-events-none no-print" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/3 rounded-full blur-3xl pointer-events-none no-print" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/3 rounded-full blur-3xl pointer-events-none no-print" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/3 rounded-full blur-3xl pointer-events-none no-print" />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-20 space-y-6">
@@ -208,10 +209,10 @@ export default function Dashboard() {
 
         {/* Real-time Scanning Progress Header Bar */}
         {!auditComplete && (
-          <div className="glass-panel p-5 rounded-3xl border border-neon-cyan/5 shadow-lg space-y-4 no-print animate-fade-in">
+          <div className="glass-panel p-5 rounded-3xl border border-primary/5 shadow-lg space-y-4 no-print animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin flex items-center justify-center shrink-0" />
+                <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin flex items-center justify-center shrink-0" />
                 <div>
                   <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Scanning category {activeCategoryIndex + 1}/8</div>
                   <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-0.5">{testCategories[activeCategoryIndex].name}</div>
@@ -219,13 +220,13 @@ export default function Dashboard() {
               </div>
               <div className="text-left sm:text-right">
                 <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Overall Progress:</span>
-                <span className="text-xs font-mono font-bold text-neon-cyan ml-1.5">{Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}%</span>
+                <span className="text-xs font-mono font-bold text-primary ml-1.5">{Math.round(((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100)}%</span>
               </div>
             </div>
             
             <div className="w-full h-1.5 bg-zinc-950 border border-zinc-900/60 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-200 shadow-[0_0_10px_rgba(0,242,255,0.25)]" 
+                className="h-full bg-gradient-to-r from-primary to-primary transition-all duration-200 shadow-[0_0_10px_rgba(0,242,255,0.25)]" 
                 style={{ width: `${((activeCategoryIndex * 5 + activeStepIndex + 1) / 40) * 100}%` }}
               />
             </div>
@@ -236,6 +237,11 @@ export default function Dashboard() {
         {auditStarted && (
           <div className="space-y-6">
             
+            {/* Infinite Horizontal Marquee Branding */}
+            <div className="w-full no-print mb-6">
+              <StatsMarquee />
+            </div>
+
             {/* Top Controls Banner */}
             <div className="flex flex-col sm:flex-row justify-between items-center glass-panel rounded-3xl px-6 py-4 gap-4 no-print shadow-md">
               <div className="flex items-center gap-3">
@@ -246,13 +252,13 @@ export default function Dashboard() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <div className="p-2.5 bg-neon-cyan/5 border border-neon-cyan/20 rounded-xl">
-                  <Shield className="w-4 h-4 text-neon-cyan animate-pulse" />
+                <div className="p-2.5 bg-primary/5 border border-primary/20 rounded-xl">
+                  <Shield className="w-4 h-4 text-primary animate-pulse" />
                 </div>
                 <div>
                   <h1 className="text-sm font-black tracking-tight text-white uppercase flex items-center gap-1.5 font-mono">
                     EXP◉SUR
-                    {!auditComplete && <Activity className="w-3.5 h-3.5 text-neon-cyan animate-pulse" />}
+                    {!auditComplete && <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />}
                   </h1>
                 </div>
               </div>
@@ -261,13 +267,13 @@ export default function Dashboard() {
                 <div className="flex bg-zinc-950/60 border border-zinc-900 p-0.5 rounded-xl text-[9px] font-mono font-bold">
                   <button
                     onClick={() => setIsAdvancedMode(false)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAdvancedMode ? 'bg-primary/15 text-primary border border-primary/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
                   >
                     BEGINNER
                   </button>
                   <button
                     onClick={() => setIsAdvancedMode(true)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${isAdvancedMode ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${isAdvancedMode ? 'bg-primary/15 text-primary border border-primary/20 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
                   >
                     ADVANCED
                   </button>
@@ -312,26 +318,26 @@ export default function Dashboard() {
 
               {/* Severity counts ledger */}
               <div className="glass-panel rounded-3xl p-6 flex flex-col justify-between print-card relative overflow-hidden min-h-[260px]">
-                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-neon-purple/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
                 <div>
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-bold">Threat Severity Ledger</span>
                   <div className="grid grid-cols-3 gap-3 mt-4 font-mono">
                     <div className="bg-neon-rose/5 border border-neon-rose/10 p-3 rounded-2xl flex flex-col justify-between h-22">
                       <span className="text-[9px] text-neon-rose font-bold uppercase">High Risk</span>
                       <div className="text-2xl font-extrabold text-neon-rose drop-shadow-[0_0_10px_rgba(244,63,94,0.25)]">
-                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "high").length : "-"}
+                        {auditComplete ? riskFindings.filter(r => r.type === "high").length : "-"}
                       </div>
                     </div>
                     <div className="bg-neon-amber/5 border border-neon-amber/10 p-3 rounded-2xl flex flex-col justify-between h-22">
                       <span className="text-[9px] text-neon-amber font-bold uppercase">Med Risk</span>
                       <div className="text-2xl font-extrabold text-neon-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.25)]">
-                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "medium").length : "-"}
+                        {auditComplete ? riskFindings.filter(r => r.type === "medium").length : "-"}
                       </div>
                     </div>
-                    <div className="bg-neon-cyan/5 border border-neon-cyan/10 p-3 rounded-2xl flex flex-col justify-between h-22">
-                      <span className="text-[9px] text-neon-cyan font-bold uppercase">Low Risk</span>
-                      <div className="text-2xl font-extrabold text-neon-cyan drop-shadow-[0_0_10px_rgba(6,182,212,0.25)]">
-                        {status === "completed" || auditComplete ? riskFindings.filter(r => r.type === "low").length : "-"}
+                    <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl flex flex-col justify-between h-22">
+                      <span className="text-[9px] text-primary font-bold uppercase">Low Risk</span>
+                      <div className="text-2xl font-extrabold text-primary drop-shadow-[0_0_10px_rgba(6,182,212,0.25)]">
+                        {auditComplete ? riskFindings.filter(r => r.type === "low").length : "-"}
                       </div>
                     </div>
                   </div>
@@ -367,11 +373,11 @@ export default function Dashboard() {
                 <div className="space-y-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between px-1 py-0.5">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-neon-cyan" />
+                      <MapPin className="w-4 h-4 text-primary" />
                       <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest">Geolocation Target Map</h3>
                     </div>
                     <HelpCircle 
-                      className="w-4 h-4 text-zinc-650 hover:text-neon-cyan cursor-pointer no-print"
+                      className="w-4 h-4 text-zinc-650 hover:text-primary cursor-pointer no-print"
                       onClick={() => handleOpenEducation("location")}
                     />
                   </div>
@@ -379,13 +385,13 @@ export default function Dashboard() {
                   <div className="flex-1 min-h-[220px] relative rounded-2xl overflow-hidden border border-zinc-900/60">
                     {activeCategoryIndex < 2 && !auditComplete ? (
                       <div className="absolute inset-0 bg-zinc-950/40 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono animate-pulse">
-                        <div className="w-6 h-6 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin mb-3" />
+                        <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin mb-3" />
                         <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">ACQUIRING GEOLOCATION SECTOR...</span>
                         <span className="text-[9px] mt-1 text-zinc-650">Resolving routing nodes and geographical references.</span>
                       </div>
                     ) : activeCategoryIndex === 2 && !auditComplete ? (
                       <div className="absolute inset-0 bg-zinc-950/40 flex flex-col items-center justify-center p-6 text-center text-zinc-500 font-mono animate-pulse">
-                        <div className="w-6 h-6 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin mb-3" />
+                        <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin mb-3" />
                         <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">SCANNING GPS DATA...</span>
                         <span className="text-[9px] mt-1 text-zinc-650">Verifying client GPS coordinates against IP subnets.</span>
                       </div>
@@ -408,7 +414,7 @@ export default function Dashboard() {
                     <div className="bg-zinc-900/40 border border-zinc-850 p-3 rounded-2xl font-mono text-[10px] space-y-1">
                       <div className="flex justify-between text-zinc-400">
                         <span>Accuracy Radius:</span>
-                        <span className="text-neon-cyan font-bold">~{gpsData.accuracy.toFixed(1)} meters</span>
+                        <span className="text-primary font-bold">~{gpsData.accuracy.toFixed(1)} meters</span>
                       </div>
                       <div className="flex justify-between text-zinc-400">
                         <span>IP vs. GPS Discrepancy:</span>
@@ -422,7 +428,7 @@ export default function Dashboard() {
                   <button
                     onClick={handleBrowserLocate}
                     disabled={locating || !auditComplete}
-                    className={`flex-1 px-4 py-2.5 rounded-2xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${locating || !auditComplete ? 'opacity-55 cursor-not-allowed' : 'hover:bg-neon-cyan/20 cursor-pointer'}`}
+                    className={`flex-1 px-4 py-2.5 rounded-2xl bg-primary/10 border border-primary/30 text-primary text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${locating || !auditComplete ? 'opacity-55 cursor-not-allowed' : 'hover:bg-primary/20 cursor-pointer'}`}
                   >
                     <Compass className={`w-4 h-4 ${locating ? 'animate-spin' : ''}`} />
                     {locating ? "LOCATING..." : "REQUEST GPS"}
@@ -453,7 +459,7 @@ export default function Dashboard() {
                   {/* Category 1: Network Identity Audit */}
                   <AuditCategoryCard
                     title="Network Identity Audit"
-                    icon={<Globe className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Globe className="w-4 h-4 text-primary" />}
                     eduKey="ip"
                     onExplainClick={handleOpenEducation}
                     status={getCardStatus(0)}
@@ -465,7 +471,7 @@ export default function Dashboard() {
                   {/* Category 2: Device Profile Audit */}
                   <AuditCategoryCard
                     title="Device Profile Audit"
-                    icon={<Cpu className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Cpu className="w-4 h-4 text-primary" />}
                     eduKey="browser"
                     onExplainClick={handleOpenEducation}
                     status={getCardStatus(1)}
@@ -477,7 +483,7 @@ export default function Dashboard() {
                   {/* Category 4: Browser Fingerprint Audit */}
                   <AuditCategoryCard
                     title={isAdvancedMode ? "Browser Fingerprinting Audit" : "Browser Identity Profile"}
-                    icon={<Cpu className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Cpu className="w-4 h-4 text-primary" />}
                     eduKey="canvas"
                     onExplainClick={handleOpenEducation}
                     paddingStyle="p-0"
@@ -498,7 +504,7 @@ export default function Dashboard() {
                   {/* Category 5 & 6: WebRTC & DNS leaks */}
                   <AuditCategoryCard
                     title="WebRTC & DNS Privacy"
-                    icon={<Shield className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Shield className="w-4 h-4 text-primary" />}
                     eduKey="webrtc"
                     onExplainClick={handleOpenEducation}
                     paddingStyle="p-0"
@@ -517,7 +523,7 @@ export default function Dashboard() {
                   {/* Category 7: Browser Capabilities */}
                   <AuditCategoryCard
                     title="Browser Capabilities Audit"
-                    icon={<Terminal className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Terminal className="w-4 h-4 text-primary" />}
                     eduKey="capabilities"
                     onExplainClick={handleOpenEducation}
                     status={getCardStatus(6)}
@@ -529,7 +535,7 @@ export default function Dashboard() {
                   {/* Category 8: Security Configurations */}
                   <AuditCategoryCard
                     title="Security Configuration Audit"
-                    icon={<Lock className="w-4 h-4 text-neon-cyan" />}
+                    icon={<Lock className="w-4 h-4 text-primary" />}
                     eduKey="security"
                     onExplainClick={handleOpenEducation}
                     status={getCardStatus(7)}
@@ -547,7 +553,7 @@ export default function Dashboard() {
                 {/* Local History trends */}
                 <div className="glass-panel rounded-3xl p-6 shadow-sm space-y-5">
                   <h3 className="font-bold text-xs text-white font-mono uppercase tracking-widest border-b border-zinc-900/80 pb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-neon-cyan" /> Local Audit History
+                    <Clock className="w-4 h-4 text-primary" /> Local Audit History
                   </h3>
                   <div className="space-y-4 font-mono text-xs">
                     {localHistory.map((item, index) => (
@@ -557,7 +563,7 @@ export default function Dashboard() {
                           <span className="text-zinc-400 tracking-wide truncate max-w-[150px] inline-block font-semibold">{item.ip}</span>
                         </div>
                         <div className="flex items-center gap-2.5">
-                          <span className="text-neon-cyan font-bold bg-neon-cyan/5 border border-neon-cyan/20 px-2 py-0.5 rounded-lg">
+                          <span className="text-primary font-bold bg-primary/5 border border-primary/20 px-2 py-0.5 rounded-lg">
                             {item.score}/100
                           </span>
                           <span className="font-extrabold text-white">{item.grade}</span>
@@ -592,7 +598,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500 font-medium">Status Check:</span>
-                      <span className="text-neon-cyan animate-pulse font-semibold">Ready</span>
+                      <span className="text-primary animate-pulse font-semibold">Ready</span>
                     </div>
                   </div>
                 </div>

@@ -13,7 +13,7 @@ import path from 'path';
 
 const visitsFile = path.join(__dirname, '..', 'visits.json');
 
-describe('WhoAmI API Integration Tests', () => {
+describe('Exposur API Integration Tests', () => {
   beforeAll(() => {
     // Set dummy environment variables to avoid real service connections
     delete process.env.DATABASE_URL;

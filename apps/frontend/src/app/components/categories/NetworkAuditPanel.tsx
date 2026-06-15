@@ -1,9 +1,9 @@
 "use client";
 
-import { WhoAmIData } from "../../types";
+import { ExposurData } from "../../types";
 
 interface NetworkAuditPanelProps {
-  data: WhoAmIData | null;
+  data: ExposurData | null;
   isAdvancedMode: boolean;
   apiUrlUsed?: string;
   status?: "pending" | "scanning" | "completed";

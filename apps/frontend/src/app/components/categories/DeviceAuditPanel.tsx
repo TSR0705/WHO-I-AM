@@ -1,10 +1,10 @@
 "use client";
 
 import { Smartphone, Tablet, Laptop } from "lucide-react";
-import { WhoAmIData } from "../../types";
+import { ExposurData } from "../../types";
 
 interface DeviceAuditPanelProps {
-  data: WhoAmIData | null;
+  data: ExposurData | null;
   isAdvancedMode: boolean;
   status?: "pending" | "scanning" | "completed";
 }

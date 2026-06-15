@@ -2,81 +2,40 @@
 
 import { ArrowRight } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Marquee } from "@/components/ui/marquee";
 
-const teamAvatars = [
-  {
-    initials: "JD",
-    src: "https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a1.jpg",
-  },
-  {
-    initials: "HJ",
-    src: "https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a2.jpg",
-  },
-  {
-    initials: "PI",
-    src: "https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a3.jpg",
-  },
-  {
-    initials: "KD",
-    src: "https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a4.jpg",
-  },
-  {
-    initials: "LD",
-    src: "https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a5.jpg",
-  },
-];
-
-const stats = [
+export const stats = [
   { emoji: "🔍", label: "PUBLIC SOURCES CHECKED", value: "500+" },
   { emoji: "🛡️", label: "EXPOSURE CATEGORIES ANALYZED", value: "12+" },
   { emoji: "⚡", label: "AVERAGE SCAN TIME", value: "< 2s" },
   { emoji: "📊", label: "DIGITAL FOOTPRINT INSIGHTS", value: "1,000+" },
 ];
 
-function AvatarStack() {
+export function StatsMarquee() {
   return (
-    <div className="flex -space-x-3">
-      {teamAvatars.map((member, i) => (
-        <Avatar
-          className="size-13 border-2 border-primary bg-neutral-800"
-          key={member.initials}
-          style={{ zIndex: teamAvatars.length - i }}
-        >
-          <AvatarImage alt={`Team member ${i + 1}`} src={member.src} />
-          <AvatarFallback className="bg-neutral-700 text-white text-xs">
-            {member.initials}
-          </AvatarFallback>
-        </Avatar>
-      ))}
+    <div className="w-full max-w-full overflow-hidden">
+      <Marquee
+        className="border-white/10 border-y bg-black/30 py-2 backdrop-blur-sm [--duration:50s] md:[--duration:40s] [--gap:3rem] select-none"
+        pauseOnHover
+        repeat={6}
+      >
+        {stats.map((stat) => (
+          <div
+            className="flex items-center gap-3 whitespace-nowrap"
+            key={stat.label}
+          >
+            <span className="font-bold font-mono text-primary text-sm tracking-wide">
+              {stat.value}
+            </span>
+            <span className="font-medium font-mono text-sm text-white/70 uppercase tracking-[0.15em]">
+              {stat.label}
+            </span>
+            <span className="text-base" aria-hidden="true">{stat.emoji}</span>
+          </div>
+        ))}
+      </Marquee>
     </div>
-  );
-}
-
-function StatsMarquee() {
-  return (
-    <Marquee
-      className="border-white/10 border-y bg-black/30 py-2 backdrop-blur-sm [--duration:30s] [--gap:2rem]"
-      pauseOnHover
-      repeat={4}
-    >
-      {stats.map((stat) => (
-        <div
-          className="flex items-center gap-3 whitespace-nowrap"
-          key={stat.label}
-        >
-          <span className="font-bold font-mono text-primary text-sm tracking-wide">
-            {stat.value}
-          </span>
-          <span className="font-medium font-mono text-sm text-white/70 uppercase tracking-[0.15em]">
-            {stat.label}
-          </span>
-          <span className="text-base">{stat.emoji}</span>
-        </div>
-      ))}
-    </Marquee>
   );
 }
 
@@ -107,7 +66,7 @@ export default function Hero() {
         className="absolute inset-0 bg-center bg-cover"
         style={{
           backgroundImage:
-            "url(https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a)",
+            "url(/HERO-IMAGE.webp)",
         }}
       >
         <div className="absolute inset-0 bg-black/40" />
@@ -115,7 +74,6 @@ export default function Hero() {
 
       <div className="relative z-10 w-full max-w-4xl px-4 text-white sm:px-8 lg:px-16">
         <div className="space-y-4">
-          <AvatarStack />
           <StatsMarquee />
         </div>
       </div>

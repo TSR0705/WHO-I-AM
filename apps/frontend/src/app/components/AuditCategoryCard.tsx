@@ -25,9 +25,9 @@ export default function AuditCategoryCard({
   isSecure = true
 }: AuditCategoryCardProps) {
   return (
-    <div className="glass-panel rounded-3xl overflow-hidden hover:scale-[1.01] hover:border-neon-cyan/10 duration-300 print-card relative flex flex-col justify-between h-full">
+    <div className="glass-panel rounded-3xl overflow-hidden hover:scale-[1.01] hover:border-primary/10 duration-300 print-card relative flex flex-col justify-between h-full">
       {/* Decorative accent top neon light indicator */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-neon-cyan/20 via-neon-purple/10 to-transparent" />
+      <div className="h-[2px] w-full bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
       
       <div className="px-6 py-4 border-b border-zinc-900/60 bg-zinc-900/10 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -41,8 +41,8 @@ export default function AuditCategoryCard({
             </span>
           )}
           {status === "scanning" && (
-            <span className="text-[9px] font-mono text-neon-cyan bg-neon-cyan/5 border border-neon-cyan/20 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping inline-block" />
+            <span className="text-[9px] font-mono text-primary bg-primary/5 border border-primary/20 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping inline-block" />
               Scanning
             </span>
           )}
@@ -58,7 +58,7 @@ export default function AuditCategoryCard({
             )
           )}
           <HelpCircle 
-            className="w-4 h-4 text-zinc-650 hover:text-neon-cyan cursor-pointer transition-colors ml-1"
+            className="w-4 h-4 text-zinc-650 hover:text-primary cursor-pointer transition-colors ml-1"
             onClick={() => onExplainClick(eduKey)}
           />
         </div>

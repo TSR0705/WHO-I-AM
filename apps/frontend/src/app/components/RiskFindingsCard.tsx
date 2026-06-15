@@ -25,7 +25,7 @@ export default function RiskFindingsCard({ findings, status = "completed" }: Ris
           Diagnostic Threat Ledger
         </h3>
         <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-neon-cyan/20 border-t-neon-cyan animate-spin mb-3" />
+          <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mb-3" />
           <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">Compiling Threat Findings...</span>
           <span className="text-[10px] font-mono text-zinc-500 mt-1">Evaluating system profiles against vulnerability database.</span>
         </div>
@@ -63,7 +63,7 @@ export default function RiskFindingsCard({ findings, status = "completed" }: Ris
 
           {lowRisks.map((risk, i) => (
             <div key={i} className="flex gap-4 items-start bg-zinc-900/20 border border-zinc-900/50 p-4 rounded-2xl print-card hover:border-zinc-800 transition-colors">
-              <Info className="w-5 h-5 text-neon-cyan shrink-0 mt-0.5" />
+              <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wide">{risk.title}</h4>
                 <p className="text-[11px] text-zinc-450 mt-1 font-mono leading-relaxed">{risk.desc}</p>

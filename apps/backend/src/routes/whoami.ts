@@ -136,23 +136,29 @@ router.get('/whoami', async (req: Request, res: Response) => {
     const normalizedOs = os.toLowerCase();
     const normalizedClient = clientOs.toLowerCase();
     
-    const isClientMac = normalizedClient.includes('mac') || normalizedClient.includes('ios') || normalizedClient.includes('apple');
+    const isClientMac = normalizedClient.includes('mac') || normalizedClient.includes('ios') || normalizedClient.includes('apple') || normalizedClient.includes('iphone') || normalizedClient.includes('ipad');
     const isClientWindows = normalizedClient.includes('win');
     const isClientLinux = normalizedClient.includes('linux');
     const isClientAndroid = normalizedClient.includes('android');
 
-    const isServerMac = normalizedOs.includes('mac') || normalizedOs.includes('ios');
+    const isServerMac = normalizedOs.includes('mac') || normalizedOs.includes('ios') || normalizedOs.includes('iphone') || normalizedOs.includes('ipad');
     const isServerWindows = normalizedOs.includes('win');
     const isServerLinux = normalizedOs.includes('linux');
     const isServerAndroid = normalizedOs.includes('android');
 
-    if (
-      (isClientMac && !isServerMac) ||
-      (isClientWindows && !isServerWindows) ||
-      (isClientLinux && !isServerLinux) ||
-      (isClientAndroid && !isServerAndroid)
-    ) {
-      userAgentMismatch = true;
+    // Android and Linux are compatible (Android reports "Linux" on navigator.platform)
+    const matchesMac = isClientMac && isServerMac;
+    const matchesWindows = isClientWindows && isServerWindows;
+    const matchesAndroid = isClientAndroid && isServerAndroid;
+    const matchesLinux = isClientLinux && (isServerLinux || isServerAndroid); // Android is Linux
+
+    const clientHasBrand = isClientMac || isClientWindows || isClientAndroid || isClientLinux;
+    const serverHasBrand = isServerMac || isServerWindows || isServerAndroid || isServerLinux;
+
+    if (clientHasBrand && serverHasBrand) {
+      if (!matchesMac && !matchesWindows && !matchesAndroid && !matchesLinux) {
+        userAgentMismatch = true;
+      }
     }
   }
 

@@ -42,7 +42,7 @@ export default function NetworkAuditPanel({
     <div className="space-y-4.5 font-mono text-xs p-4">
       <div>
         <span className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-0.5">Public IP Address</span>
-        <span className="font-bold text-sm text-neon-cyan select-all tracking-wide">{data.ip}</span>
+        <span className="font-bold text-sm text-primary select-all tracking-wide">{data.ip}</span>
       </div>
       <div>
         <span className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-0.5">ISP Network Provider</span>

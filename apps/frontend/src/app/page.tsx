@@ -10,7 +10,7 @@ export default function Home() {
       <Hero />
 
       {/* Counter Component Integration Section */}
-      <section className="py-20 px-4 md:px-8 max-w-4xl mx-auto border-t border-white/10 flex flex-col items-center gap-8">
+      {/* <section className="py-20 px-4 md:px-8 max-w-4xl mx-auto border-t border-white/10 flex flex-col items-center gap-8">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">
             Integrated Counter Component
@@ -21,7 +21,7 @@ export default function Home() {
         </div>
         
         <Counter />
-      </section>
+      </section> */}
 
       {/* Footer Section */}
       <footer className="border-t border-white/10 bg-black/60 py-12 px-4 md:px-8 relative z-10 no-print">

@@ -18,6 +18,9 @@
   --animate-scanline: scanline 8s linear infinite;
   --animate-cyber-glow: cyber-glow 2s ease-in-out infinite alternate;
   --animate-spin-slow: spin 8s linear infinite;
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --color-primary: oklch(0.95 0.16 118.89);
 }
 
 @keyframes pulse-slow {
@@ -33,6 +36,24 @@
 @keyframes cyber-glow {
   0% { text-shadow: 0 0 5px rgba(0, 242, 255, 0.2), 0 0 10px rgba(0, 242, 255, 0.1); }
   100% { text-shadow: 0 0 15px rgba(0, 242, 255, 0.6), 0 0 25px rgba(0, 242, 255, 0.3); }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
 }
 
 :root {
@@ -51,6 +72,12 @@
 
   --bg-color: hsl(var(--background));
   --fg-color: hsl(var(--foreground));
+  
+  --primary: oklch(0.95 0.16 118.89);
+}
+
+.dark {
+  --primary: oklch(0.95 0.16 118.89);
 }
 
 /* @keyframes cell-pulse {
